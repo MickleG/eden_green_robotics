@@ -1,0 +1,7 @@
+1. git pull origin main
+2. work on code
+3. git add --all
+4. git commit -m 'message of what you did'
+Two possibilities after 4:
+A. commit fails: git pull origin main to make sure your branch is up to date. If commit still doesn't work, call Michael
+B. commit works: in this case, git push origin main
