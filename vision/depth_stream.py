@@ -7,6 +7,7 @@
 
 # First import the library
 import pyrealsense2 as rs
+
 # sofia was here
 
 # Declare pointcloud object, for calculating pointclouds and texture mappings
