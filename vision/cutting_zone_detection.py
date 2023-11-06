@@ -43,13 +43,17 @@ while True:
 	mask = cv2.erode(mask, kernel, iterations=1)
 	mask = cv2.dilate(mask, kernel, iterations=1)
 
-	u_indices = isolated_mask[0]
-	v_indices = isolated_mask[1]
+	u_indices = isolated_mask[1]
+	v_indices = isolated_mask[0]
 
-	avg_u = int(statistics.mean(u_indices))
-	avg_v = int(statistics.mean(v_indices))
+	if(len(v_indices) > 100 and len(u_indices) > 100):
+		avg_u = int(statistics.mean(u_indices))
+		avg_v = int(statistics.mean(v_indices))
+	else:
+		avg_u = None
+		avg_v = None
 
-	mask = cv2.circle(mask, (avg_v, avg_u), radius=20, color=[0, 255, 0], thickness=-1)
+	color_image = cv2.circle(color_image, (avg_u, avg_v), radius=2, color=[0, 255, 0], thickness=-1)
 
 
 
@@ -64,6 +68,7 @@ while True:
 	# break
 	cv2.imshow('Masked image', result)
 	cv2.imshow('mask', mask)
+	cv2.imshow('marked centroid', color_image)
 
 	
 	# depth_image_filtered = depth_image * mask

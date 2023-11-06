@@ -4,7 +4,7 @@ import numpy as np
 
 threshold = 50
 
-vid = cv2.VideoCapture(2)
+vid = cv2.VideoCapture(1)
 
 #insert code to calibrate start and end positions
 
