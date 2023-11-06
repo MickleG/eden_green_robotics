@@ -1,6 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
 import cv2
+import statistics
 
 ## make connection to webcam
 pipe = rs.pipeline()
@@ -26,17 +27,53 @@ while True:
 	color_image = np.asanyarray(color_frame.get_data())
 	depth_image = np.asanyarray(depth_frame.get_data())
 
+	dimensions = depth_image.shape
+	height = dimensions[0]
+	width = dimensions[1]
+
 	# print(color_image)
 
 	mask = cv2.inRange(color_image, np.array([30, 0, 0]), np.array([255, 50, 30]))
 
+	isolated_mask = np.nonzero(mask)
+
+
+
+	kernel = np.ones((4, 4), np.uint8)
+	mask = cv2.erode(mask, kernel, iterations=1)
+	mask = cv2.dilate(mask, kernel, iterations=1)
+
+	u_indices = isolated_mask[0]
+	v_indices = isolated_mask[1]
+
+	avg_u = int(statistics.mean(u_indices))
+	avg_v = int(statistics.mean(v_indices))
+
+	mask = cv2.circle(mask, (avg_v, avg_u), radius=20, color=[0, 255, 0], thickness=-1)
+
+
+
+	result = cv2.bitwise_and(depth_image, depth_image, mask= mask)
+
+	
+
+	# for i in range(height):
+	# 	for j in range(width):
+	# 		print(depth_image[i][j])
+
+	# break
+	cv2.imshow('Masked image', result)
 	cv2.imshow('mask', mask)
 
+	
 	# depth_image_filtered = depth_image * mask
 
 	## Finds minimum z distance in frame
-	min_z = np.min(depth_image[np.nonzero(depth_image)]) / 10000
-	print(min_z)
+	# min_z = np.min(result[np.nonzero(result)]) / 10000
+	# print(min_z)
+	## Finds minimum y distance in frame
+	# min_y = np.min(result[np.nonzero(result)]) / 10000
+	# print(min_y)
 
 	## break out of screen if press q
 	if cv2.waitKey(1) == ord('q'):
