@@ -2,6 +2,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 import statistics
+import time
 
 ## make connection to webcam
 pipe = rs.pipeline()
@@ -25,7 +26,8 @@ while True:
 
 	## convert images to numpy arrays
 	color_image = np.asanyarray(color_frame.get_data())
-	depth_image = np.asanyarray(depth_frame.get_data())
+	depth_image = np.asarray(depth_frame.get_data())
+
 
 	dimensions = depth_image.shape
 	height = dimensions[0]
@@ -46,26 +48,39 @@ while True:
 	u_indices = isolated_mask[1]
 	v_indices = isolated_mask[0]
 
-	if(len(v_indices) > 100 and len(u_indices) > 100):
+	if(len(v_indices) > 900): # cup detected, code for cup operations goes here
 		avg_u = int(statistics.mean(u_indices))
 		avg_v = int(statistics.mean(v_indices))
-	else:
+		min_z_u = None
+		min_z_v = None
+	else: # cup not detected, hugging vine code here
 		avg_u = None
 		avg_v = None
 
+		min_val = np.min(depth_image[np.nonzero(depth_image)])
+		min_z_index = list(zip(*np.where(depth_image == min_val)))
+
+		min_z_v = min_z_index[0][0]
+		min_z_u = min_z_index[0][1]
+
+		# for i in range(len(depth_image)):
+		# 	try:
+		# 		min_val = np.min(depth_image[i][np.nonzero(depth_image[i])])
+		# 		if(min_val < min_z):
+		# 			min_z = min_val
+		# 			min_z_v = i
+		# 	except Exception as e:
+		# 		print(e)
+
+		# min_z_u = np.where(depth_image == min_z)[0][0]
+
 	color_image = cv2.circle(color_image, (avg_u, avg_v), radius=2, color=[0, 255, 0], thickness=-1)
+	color_image = cv2.circle(color_image, (min_z_u, min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
 
 
 
 	result = cv2.bitwise_and(depth_image, depth_image, mask= mask)
 
-	
-
-	# for i in range(height):
-	# 	for j in range(width):
-	# 		print(depth_image[i][j])
-
-	# break
 	cv2.imshow('Masked image', result)
 	cv2.imshow('mask', mask)
 	cv2.imshow('marked centroid', color_image)
@@ -73,12 +88,6 @@ while True:
 	
 	# depth_image_filtered = depth_image * mask
 
-	## Finds minimum z distance in frame
-	# min_z = np.min(result[np.nonzero(result)]) / 10000
-	# print(min_z)
-	## Finds minimum y distance in frame
-	# min_y = np.min(result[np.nonzero(result)]) / 10000
-	# print(min_y)
 
 	## break out of screen if press q
 	if cv2.waitKey(1) == ord('q'):

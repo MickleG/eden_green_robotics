@@ -3,6 +3,7 @@ from gpiozero import PWMOutputDevice
 from gpiozero import OutputDevice
 from gpiozero import InputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+
 import time
 
 factory = PiGPIOFactory(host='128.46.190.249')
@@ -14,9 +15,9 @@ direction = OutputDevice(4, pin_factory=factory)
 
 for i in range(10000):
 	step.on()
-	time.sleep(0.001)
+	time.sleep(60e-6)
 	step.off()
-	time.sleep(0.0005)
+	time.sleep(60e-6)
 
 # while True:
 # 	input("Press Enter to turn LED on")
