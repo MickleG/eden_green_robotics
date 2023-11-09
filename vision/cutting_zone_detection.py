@@ -17,6 +17,14 @@ cfg.enable_stream(rs.stream.depth, 424, 240, rs.format.z16, 30)
 ## start streaming
 pipe.start(cfg)
 
+collection_min_z_u = []
+collection_min_z_v = []
+
+target_frame_count = 5
+record_min_z = False
+avg_min_z_u = 0
+avg_min_z_v = 0
+
 
 while True: 
 	## wait for frames to become available
@@ -63,6 +71,17 @@ while True:
 		min_z_v = min_z_index[0][0]
 		min_z_u = min_z_index[0][1]
 
+		if(len(collection_min_z_u) <= target_frame_count):
+			collection_min_z_u.append(min_z_u)
+			collection_min_z_v.append(min_z_v)
+			record_min_z = True
+		else:
+			avg_min_z_u = int(statistics.mean(collection_min_z_u))
+			avg_min_z_v = int(statistics.mean(collection_min_z_v))
+			collection_min_z_u = []
+			collection_min_z_v = []
+			record_min_z = False
+
 		# for i in range(len(depth_image)):
 		# 	try:
 		# 		min_val = np.min(depth_image[i][np.nonzero(depth_image[i])])
@@ -75,7 +94,8 @@ while True:
 		# min_z_u = np.where(depth_image == min_z)[0][0]
 
 	color_image = cv2.circle(color_image, (avg_u, avg_v), radius=2, color=[0, 255, 0], thickness=-1)
-	color_image = cv2.circle(color_image, (min_z_u, min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
+	if(record_min_z):
+		color_image = cv2.circle(color_image, (avg_min_z_u, avg_min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
 
 
 

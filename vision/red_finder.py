@@ -4,7 +4,7 @@ import numpy as np
 
 threshold = 50
 
-vid = cv2.VideoCapture(1)
+vid = cv2.VideoCapture(2)
 
 #insert code to calibrate start and end positions
 
@@ -16,8 +16,8 @@ while(vid.isOpened()):
 	if(ret):
 		# hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-		lower_red = np.array([0, 100, 100])
-		upper_red = np.array([10, 255, 255])
+		lower_red = np.array([0, 0, 100])
+		upper_red = np.array([50, 50, 255])
 
 		mask = cv2.inRange(frame, lower_red, upper_red)
 
