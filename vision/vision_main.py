@@ -19,8 +19,6 @@ def depth_stream(pipe):
 	height = dimensions[0]
 	width = dimensions[1]
 
-	# print(color_image)
-
 	mask = cv2.inRange(color_image, np.array([30, 0, 0]), np.array([255, 50, 30]))
 
 	isolated_mask = np.nonzero(mask)
@@ -33,3 +31,15 @@ def depth_stream(pipe):
 	v_indices = isolated_mask[0]
 
 	return(depth_image, color_image, mask, u_indices, v_indices)
+
+def collect_vine_mask(color_image):
+	vine_mask = cv2.inRange(color_image, np.array([0, 0, 0]), np.array([60, 60, 60]))
+
+	isolated_mask = np.nonzero(vine_mask)
+
+	kernel = np.ones((4, 4), np.uint8)
+	vine_mask = cv2.erode(vine_mask, kernel, iterations=1)
+	vine_mask = cv2.dilate(vine_mask, kernel, iterations=1)
+
+	return(vine_mask)
+

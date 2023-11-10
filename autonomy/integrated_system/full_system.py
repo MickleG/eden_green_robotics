@@ -9,12 +9,13 @@ import sys
 
 sys.path.append("../../vision")
 
-from depth_stream import depth_stream
+from vision_main import depth_stream
+from vision_main import collect_vine_mask
 
 median_filter_buffer_u = []
 median_filter_buffer_v = []
 
-median_filter_size = 3
+median_filter_size = 1
 record_min_z = False
 avg_min_z_u = 0
 avg_min_z_v = 0
@@ -36,19 +37,26 @@ pipe.start(cfg)
 
 while(True):
 
-	depth_image, color_image, mask, u_indices, v_indices = depth_stream(pipe)
+	depth_image, color_image, cup_mask, cup_u_indices, cup_v_indices = depth_stream(pipe)
 
-	if(len(v_indices) > 900): # cup detected, code for cup operations goes here
-		avg_cup_u = int(statistics.mean(u_indices))
-		avg_cup_v = int(statistics.mean(v_indices))
+	if(len(cup_v_indices) > 900): # cup detected, code for cup operations goes here
+		avg_cup_u = int(statistics.mean(cup_u_indices))
+		avg_cup_v = int(statistics.mean(cup_v_indices))
 		avg_min_z_u = None
 		avg_min_z_v = None
+
 	else: # cup not detected, hugging vine code here
 		avg_cup_u = None
 		avg_cup_v = None
 
-		min_val = np.min(depth_image[np.nonzero(depth_image)])
-		min_z_index = list(zip(*np.where(depth_image == min_val)))
+		vine_mask = collect_vine_mask(color_image)
+
+		cv2.imshow("vine_mask", vine_mask)
+
+		filtered_depth_image = cv2.bitwise_and(depth_image, depth_image, mask=vine_mask)
+
+		min_val = np.min(filtered_depth_image[np.nonzero(filtered_depth_image)])
+		min_z_index = list(zip(*np.where(filtered_depth_image == min_val)))
 
 		min_z_v = min_z_index[0][0]
 		min_z_u = min_z_index[0][1]
@@ -58,29 +66,29 @@ while(True):
 		avg_min_z_v = int(resolution[1] / 2)
 
 
-		##median filtering the min_z indices to achieve less noise
-		if(len(median_filter_buffer_u) <= median_filter_size):
-			median_filter_buffer_u.append(min_z_u)
-			# median_filter_buffer_v.append(min_z_v)
-		else:
-			avg_min_z_u = int(statistics.mean(median_filter_buffer_u))
-			# avg_min_z_v = int(statistics.mean(median_filter_buffer_v))
-			median_filter_buffer_u.pop(0)
-			# median_filter_buffer_v.pop(0)
-			median_filter_buffer_u.append(min_z_u)
-			# median_filter_buffer_v.append(min_z_v)
+		# ##median filtering the min_z indices to achieve less noise
+		# if(len(median_filter_buffer_u) <= median_filter_size):
+		# 	median_filter_buffer_u.append(min_z_u)
+		# 	# median_filter_buffer_v.append(min_z_v)
+		# else:
+		# 	avg_min_z_u = int(statistics.mean(median_filter_buffer_u))
+		# 	# avg_min_z_v = int(statistics.mean(median_filter_buffer_v))
+		# 	median_filter_buffer_u.pop(0)
+		# 	# median_filter_buffer_v.pop(0)
+		# 	median_filter_buffer_u.append(min_z_u)
+		# 	# median_filter_buffer_v.append(min_z_v)
 
 		e = int(resolution[0] / 2 - avg_min_z_u)
-		print(e)
+		# print(e)
 
 	color_image = cv2.circle(color_image, (avg_cup_u, avg_cup_v), radius=2, color=[0, 255, 0], thickness=-1)
 	color_image = cv2.circle(color_image, (avg_min_z_u, avg_min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
 
-	result = cv2.bitwise_and(depth_image, depth_image, mask=mask)
+	result = cv2.bitwise_and(depth_image, depth_image, mask=cup_mask)
 
 
-	cv2.imshow('Masked image', result)
-	cv2.imshow('mask', mask)
+	# cv2.imshow('Masked image', result)
+	cv2.imshow('mask', cup_mask)
 	cv2.imshow('marked centroid', color_image)
 	## break out of screen if press q
 	if cv2.waitKey(1) == ord('q'):
