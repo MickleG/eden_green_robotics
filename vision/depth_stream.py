@@ -1,49 +1,35 @@
-## License: Apache 2.0. See LICENSE file in root directory.
-## Copyright(c) 2017 Intel Corporation. All Rights Reserved.
-
-#####################################################
-##                  Export to PLY                  ##
-#####################################################
-
-# First import the library
 import pyrealsense2 as rs
+import numpy as np
+import cv2
+import statistics
+import time
 
-# sofia was here
+def depth_stream(pipe):
 
-# Declare pointcloud object, for calculating pointclouds and texture mappings
-pc = rs.pointcloud()
-# We want the points object to be persistent so we can display the last cloud when a frame drops
-points = rs.points()
+	## wait for frames to become available
+	frame = pipe.wait_for_frames()
+	depth_frame = frame.get_depth_frame()
+	color_frame = frame.get_color_frame()
 
-# Declare RealSense pipeline, encapsulating the actual device and sensors
-pipe = rs.pipeline()
-config = rs.config()
-# Enable depth stream
-config.enable_stream(rs.stream.depth)
+	## convert images to numpy arrays
+	color_image = np.asanyarray(color_frame.get_data())
+	depth_image = np.asarray(depth_frame.get_data())
 
-# Start streaming with chosen configuration
-pipe.start(config)
+	dimensions = depth_image.shape
+	height = dimensions[0]
+	width = dimensions[1]
 
-# We'll use the colorizer to generate texture for our PLY
-# (alternatively, texture can be obtained from color or infrared stream)
-colorizer = rs.colorizer()
+	# print(color_image)
 
-try:
-    # Wait for the next set of frames from the camera
-    frames = pipe.wait_for_frames()
-    colorized = colorizer.process(frames)
+	mask = cv2.inRange(color_image, np.array([30, 0, 0]), np.array([255, 50, 30]))
 
-    # Create save_to_ply object
-    ply = rs.save_to_ply("1.ply")
+	isolated_mask = np.nonzero(mask)
 
-    # Set options to the desired values
-    # In this example we'll generate a textual PLY with normals (mesh is already created by default)
-    ply.set_option(rs.save_to_ply.option_ply_binary, False)
-    ply.set_option(rs.save_to_ply.option_ply_normals, True)
+	kernel = np.ones((4, 4), np.uint8)
+	mask = cv2.erode(mask, kernel, iterations=1)
+	mask = cv2.dilate(mask, kernel, iterations=1)
 
-    print("Saving to 1.ply...")
-    # Apply the processing block to the frameset which contains the depth frame and the texture
-    ply.process(colorized)
-    print("Done")
-finally:
-    pipe.stop()
+	u_indices = isolated_mask[1]
+	v_indices = isolated_mask[0]
+
+	return(depth_image, color_image, mask, u_indices, v_indices)
