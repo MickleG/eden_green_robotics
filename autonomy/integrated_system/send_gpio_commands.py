@@ -13,8 +13,5 @@ direction2 = OutputDevice(pin=21, pin_factory=factory)
 
 while(True):
 	step1.on()
-	# step2.on()
 	step1.off()
-	# step2.off()
 	time.sleep(0.000003)
-	# time.sleep(0.001)
