@@ -34,6 +34,8 @@ TARGET_Z = 65
 resolution = [424, 240]
 finding_cup = False
 
+cutting_done_zones = [x1, y1, x2, y2]
+
 # make connection to webcam
 pipe = rs.pipeline()
 # make variable for initiation calls
@@ -46,6 +48,17 @@ cfg.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, 
 
 # start streaming
 pipe.start(cfg)
+def run_calibration():
+    global cutting_done_zones
+    #general idea of what to do
+    #close_scissors()
+    #cutting_done_zones = red_fiducials()
+
+    #open_scissors()
+
+def is_cut_done(curr_x1, curr_y1, curr_x2, curr_y2):
+    #logic
+    #return(boolean)
 
 while(True):
 
