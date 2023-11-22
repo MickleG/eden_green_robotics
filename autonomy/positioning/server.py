@@ -15,10 +15,10 @@ print("server is now running")
 #clientsocket, address = s.accept()
 #print(f"Connection from {address} has been established")
 print(f"Connection from {addr} has been established")
-step1 = OutputDevice(pin=23)
-dir1 = OutputDevice(pin=27)
+step1 = OutputDevice(pin=17)
+dir1 = OutputDevice(pin=18)
 step2 = OutputDevice(pin=4)
-dir2 = OutputDevice(pin=21)
+dir2 = OutputDevice(pin=27)
 time_delay = 0.000003
 e_x = 0
 e_z = 0
