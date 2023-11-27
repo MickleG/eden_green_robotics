@@ -10,13 +10,20 @@ import cv2
 import statistics
 import time
 import sys
+import gpiozero as gpio
 
 sys.path.append("../../vision")
 
 from vision_main import depth_stream
 from vision_main import collect_vine_mask
+from limit_switch import check_bounds
 
 import socket
+
+button1 = gpio.Button(2)
+button2 = gpio.Button(5)
+button3 = gpio.Button(3)
+button4 = gpio.Button(6)
 
 # setting up comms between pi and computer
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,8 +41,6 @@ TARGET_Z = 65
 resolution = [424, 240]
 finding_cup = False
 
-cutting_done_zones = [x1, y1, x2, y2]
-
 # make connection to webcam
 pipe = rs.pipeline()
 # make variable for initiation calls
@@ -48,18 +53,10 @@ cfg.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, 
 
 # start streaming
 pipe.start(cfg)
-def run_calibration():
-    global cutting_done_zones
-    #general idea of what to do
-    #close_scissors()
-    #cutting_done_zones = red_fiducials()
-
-    #open_scissors()
-
-def is_cut_done(curr_x1, curr_y1, curr_x2, curr_y2):
-    pass
 
 while(True):
+    if(check_bounds(button1, button2, button3, button4)):
+        break
 
 	depth_image, color_image, cup_mask, cup_u_indices, cup_v_indices = depth_stream(pipe)
 

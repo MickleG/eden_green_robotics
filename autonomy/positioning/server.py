@@ -81,7 +81,7 @@ def collectImage():
                 print("changed to align_z")
                 align_z = True
                 align_x = False
-            if(e_z <= 65 and align_z):
+            if(e_z <= 65 and e_z > 50 and align_z):
                 print("centered")
                 centered = True
 
