@@ -57,8 +57,7 @@ def run_calibration():
     #open_scissors()
 
 def is_cut_done(curr_x1, curr_y1, curr_x2, curr_y2):
-    #logic
-    #return(boolean)
+    pass
 
 while(True):
 
