@@ -92,5 +92,5 @@ t1.start()
 t2.start()
 
 while(True):
-    print(e_z)
+    print(e_x)
 
