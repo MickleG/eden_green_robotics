@@ -10,20 +10,14 @@ import cv2
 import statistics
 import time
 import sys
-import gpiozero as gpio
 
 sys.path.append("../../vision")
 
 from vision_main import depth_stream
 from vision_main import collect_vine_mask
-from limit_switch import check_bounds
 
 import socket
 
-button1 = gpio.Button(2)
-button2 = gpio.Button(5)
-button3 = gpio.Button(3)
-button4 = gpio.Button(6)
 
 # setting up comms between pi and computer
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,9 +28,9 @@ median_filter_buffer_v = []
 
 median_filter_size = 1
 record_min_z = False
-avg_min_z_u = 0
-avg_min_z_v = 0
-TARGET_Z = 65
+avg_min_z_u = None
+avg_min_z_v = None
+TARGET_Z = 75
 
 resolution = [424, 240]
 finding_cup = False
@@ -46,19 +40,32 @@ pipe = rs.pipeline()
 # make variable for initiation calls
 cfg = rs.config()
 
+min_z_u_storage = []
+
 # set up rgb streaming (size: 424x240, format: 8 bit, fps: 30)
-cfg.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, 15)
+cfg.enable_stream(rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, 30)
 # set up depth streaming (16-bit format)
-cfg.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, 15)
+cfg.enable_stream(rs.stream.depth, resolution[0], resolution[1], rs.format.z16, 30)
 
 # start streaming
 pipe.start(cfg)
 
 while(True):
-    if(check_bounds(button1, button2, button3, button4)):
-        break
 
 	depth_image, color_image, cup_mask, cup_u_indices, cup_v_indices = depth_stream(pipe)
+
+	# contours, hierarchy = cv2.findContours(cup_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+	depth_image = depth_image[0:resolution[1], int(resolution[0] / 3):int(resolution[0] * 2 / 3)]
+	color_image = color_image[0:resolution[1], int(resolution[0] / 3):int(resolution[0] * 2 / 3)]
+
+	# cv2.imshow('depth image', depth_image)
+
+	# depth_image = cv2.GaussianBlur(depth_image, (5, 5), 0)
+
+	# cv2.imshow('blurred image', depth_image)
+
+	new_resolution = depth_image.shape
 
 	if(len(cup_v_indices) > 900 and finding_cup): # cup detected, code for cup operations goes here
 		avg_cup_u = int(statistics.mean(cup_u_indices))
@@ -77,20 +84,31 @@ while(True):
 		min_val = np.min(depth_image[np.nonzero(depth_image)])
 		min_z_index = list(zip(*np.where(depth_image == min_val)))
 
+		
+
 		min_z_v = min_z_index[0][0]
 		min_z_u = min_z_index[0][1]
 
+		if(len(min_z_u_storage) < 1):
+			min_z_u_storage.append(min_z_u)
+			continue
+		if(len(min_z_u_storage) == 1):
+			min_z_u = int((min_z_u + min_z_u_storage[0]) / 2)
+
 		avg_min_z_u = min_z_u
-		avg_min_z_v = int(resolution[1] / 2)
+		# avg_min_z_v = int(resolution[1] / 2)
+		avg_min_z_v = min_z_v
 
 
 		# calculating error and sending result to raspberry pi to run motors
-		e_x = int(resolution[0] / 2 - avg_min_z_u)
-		e_z = min_val - TARGET_Z
+		e_x = int(new_resolution[1] / 2 - avg_min_z_u)
+		e_z = min_val
 		s.sendto(bytes(str(e_x) + ";" + str(int(e_z / 10)), "utf-8"), addr) #signifying hug command with ";" to limit size of message
-		
-
-	# color_image = cv2.circle(color_image, (avg_cup_u, avg_cup_v), radius=2, color=[0, 255, 0], thickness=-1)
+	# for contour in contours:
+	# 	mean_u = int(np.mean(contour[:, 0, 0]))
+	# 	mean_v = int(np.mean(contour[:, 0, 1]))
+	# 	color_image = cv2.circle(color_image, (mean_u, mean_v), radius=3, color=[0, 0, 255], thickness=-1)
+	color_image = cv2.circle(color_image, (avg_cup_u, avg_cup_v), radius=2, color=[0, 255, 0], thickness=-1)
 	color_image = cv2.circle(color_image, (avg_min_z_u, avg_min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
 
 	# result = cv2.bitwise_and(depth_image, depth_image, mask=cup_mask)

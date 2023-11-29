@@ -23,9 +23,9 @@ def depth_stream(pipe):
 
 	isolated_mask = np.nonzero(mask)
 
-	kernel = np.ones((4, 4), np.uint8)
-	mask = cv2.erode(mask, kernel, iterations=1)
-	mask = cv2.dilate(mask, kernel, iterations=1)
+	kernel = np.ones((2, 2), np.uint8)
+	mask = cv2.erode(mask, kernel, iterations=3)
+	mask = cv2.dilate(mask, kernel, iterations=3)
 
 	u_indices = isolated_mask[1]
 	v_indices = isolated_mask[0]
