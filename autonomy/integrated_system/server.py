@@ -3,8 +3,13 @@
 
 import socket
 import time
-from gpiozero import OutputDevice
+from gpiozero import OutputDevice, Button
 import threading
+import sys
+
+sys.path.append("../integrated_system")
+
+from limit_switch import check_bounds
 
 addr = "128.46.190.198"
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,11 +32,16 @@ align_x = False
 align_z = False
 
 received_msg = None
-dummy = True
 
+button1 = Button(2)
+button2 = Button(5)
+button3 = Button(3)
+button4 = Button(6)
 
 def runMotors():
     while(True):
+        if(check_bounds(button1, button2, button3, button4)):
+           break
         if(not align_x and not align_z):
             dir1.on()
             dir2.on()
@@ -45,12 +55,6 @@ def runMotors():
         elif(not align_x and align_z):
             dir1.on()
             dir2.on()
-        #if(e_x > 0 and align_x and not align_z):
-         #   dir1.off()
-          #  dir2.on()
-        #elif(e_x <= 0 and align_x):
-         #   dir1.on()
-          #  dir2.off()
 
         if((not centered) and (received_msg)):
             step1.on()
@@ -73,17 +77,26 @@ def collectImage():
             e_x = int(e_x)
             e_z = int(e_z)
 
-            if(e_z < 200 and not align_x and not align_z):
+            #if(e_z < 200 and not align_x and not align_z):
+            if(e_z < 200 and abs(e_x) > 10):
                 print("changed to align_x")
                 align_x = True
                 align_z = False
-            if(abs(e_x) <= 20 and align_x and not align_z):
+                centered = False
+            #if(abs(e_x) <= 10 and align_x and not align_z and e_z > 75):
+            elif((abs(e_x) <= 10 and e_z > 75)):
                 print("changed to align_z")
                 align_z = True
                 align_x = False
-            if(e_z <= 65 and e_z > 50 and align_z):
+                centered = False
+            #if(e_z <= 75 and e_z > 50 and align_z):
+            elif(e_z <= 75 and abs(e_x) <= 10):
                 print("centered")
                 centered = True
+            else:
+                align_x = False
+                align_z = True
+                centered = False
 
 t1 = threading.Thread(target=runMotors)
 t2 = threading.Thread(target=collectImage)
@@ -92,5 +105,5 @@ t1.start()
 t2.start()
 
 while(True):
-    print(e_x)
+    print(e_x, e_z)
 
