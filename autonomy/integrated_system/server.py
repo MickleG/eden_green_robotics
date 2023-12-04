@@ -38,7 +38,9 @@ button2 = Button(5)
 button3 = Button(3)
 button4 = Button(6)
 
-def runMotors():
+### scissorsOpen = False
+
+def runElectronics():
     while(True):
         if(check_bounds(button1, button2, button3, button4)):
            break
@@ -61,11 +63,13 @@ def runMotors():
             step2.on()
             step1.off()
             step2.off()
+        ### if(scissorsOpen):
+            ### gpio stuff here
 
         time.sleep(time_delay)
 
-def collectImage():
-    global e_x, e_z, align_x, align_z, centered, received_msg
+def collectMessage():
+    global e_x, e_z, align_x, align_z, centered, received_msg, scissorsOpen
 
     while(True):
         received_msg, address = s.recvfrom(1024)
@@ -97,9 +101,13 @@ def collectImage():
                 align_x = False
                 align_z = True
                 centered = False
+        ###elif("@" in received_msg):
+            ### scissorsOpen = received_msg.split("@")[0]
 
-t1 = threading.Thread(target=runMotors)
-t2 = threading.Thread(target=collectImage)
+
+
+t1 = threading.Thread(target=runElectronics)
+t2 = threading.Thread(target=collectMessage)
 
 t1.start()
 t2.start()
