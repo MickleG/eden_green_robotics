@@ -43,3 +43,5 @@ def collect_vine_mask(color_image):
 
 	return(vine_mask)
 
+### add fiducial functions here ###
+

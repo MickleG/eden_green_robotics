@@ -16,7 +16,11 @@ sys.path.append("../../vision")
 from vision_main import depth_stream
 from vision_main import collect_vine_mask
 
+### import fiducial functions from vision_main here ###
+
 import socket
+
+### start webcam stream here ###
 
 
 # setting up comms between pi and computer
@@ -31,6 +35,8 @@ record_min_z = False
 avg_min_z_u = None
 avg_min_z_v = None
 TARGET_Z = 75
+
+run_calibration = True
 
 resolution = [424, 240]
 finding_cup = False
@@ -53,6 +59,20 @@ pipe.start(cfg)
 while(True):
 
 	depth_image, color_image, cup_mask, cup_u_indices, cup_v_indices = depth_stream(pipe)
+
+	### collect fiducial image ###
+
+	### if(run_calibration):
+	###		do calibration
+	###		run_calibration = False
+	###send message to rpi to perform cut using s.sendto() otherwise known as socket
+
+	### if(gripped):
+	###		send true message
+	###		check if cut
+	###		if(cut_success):
+
+
 
 	# contours, hierarchy = cv2.findContours(cup_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
