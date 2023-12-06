@@ -26,7 +26,7 @@ import socket
 # setting up comms between pi and computer
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 #s.connect(("128.46.190.198", 9000)) # replace IP address with Raspberry Pi IP address
-addr = ("128.46.190.198", 9000)
+addr = ("128.46.190.170", 9000)
 median_filter_buffer_u = []
 median_filter_buffer_v = []
 
@@ -87,33 +87,53 @@ while(True):
 
 	new_resolution = depth_image.shape
 
-	if(len(cup_v_indices) > 900 and finding_cup): # cup detected, code for cup operations goes here
-		avg_cup_u = int(statistics.mean(cup_u_indices))
-		avg_cup_v = int(statistics.mean(cup_v_indices))
-		avg_min_z_u = None
-		avg_min_z_v = None
+	# if(len(cup_v_indices) > 900 and finding_cup): # cup detected, code for cup operations goes here
+		# avg_cup_u = int(statistics.mean(cup_u_indices))
+		# avg_cup_v = int(statistics.mean(cup_v_indices))
+		# avg_min_z_u = None
+		# avg_min_z_v = None
 
-		# s.send(bytes(str(avg_cup_u) + ";" + str(avg_cup_v), "utf-8"))
-		s.sendto(bytes(str(avg_cup_u) + ":" + str(avg_cup_v), "utf-8"), addr) #signifying cup command with ":" to limit size of message
+		# # s.send(bytes(str(avg_cup_u) + ";" + str(avg_cup_v), "utf-8"))
+		# s.sendto(bytes(str(avg_cup_u) + ":" + str(avg_cup_v), "utf-8"), addr) #signifying cup command with ":" to limit size of message
 
 
-	else: # cup not detected, hugging vine code here
+	if(True): # cup not detected, hugging vine code here
 		avg_cup_u = None
 		avg_cup_v = None
 
-		min_val = np.min(depth_image[np.nonzero(depth_image)])
-		min_z_index = list(zip(*np.where(depth_image == min_val)))
+		# min_val = np.min(depth_image[np.nonzero(depth_image)])
+		min_val = 1600
+		min_z_indices = list(zip(*np.where(depth_image <= min_val)))
 
-		
+		mask = np.zeros(depth_image.shape, dtype="uint8")
+		mask[min_z_indices] = True
 
-		min_z_v = min_z_index[0][0]
-		min_z_u = min_z_index[0][1]
+		counter = 0
 
-		if(len(min_z_u_storage) < 1):
-			min_z_u_storage.append(min_z_u)
-			continue
-		if(len(min_z_u_storage) == 1):
-			min_z_u = int((min_z_u + min_z_u_storage[0]) / 2)
+		# print(mask)
+
+		for val in mask[0]:
+			if(val == 1):
+				counter += 1
+
+		print(counter)
+
+		new_img = cv2.bitwise_and(color_image, color_image, mask=mask)
+
+		cv2.imshow('clipped image', new_img)
+
+		time.sleep(10)
+
+		break
+
+		# min_z_v = min_z_index[0][0]
+		# min_z_u = min_z_index[0][1]
+
+		# if(len(min_z_u_storage) < 1):
+		# 	min_z_u_storage.append(min_z_u)
+		# 	continue
+		# if(len(min_z_u_storage) == 1):
+		# 	min_z_u = int((min_z_u + min_z_u_storage[0]) / 2)
 
 		avg_min_z_u = min_z_u
 		# avg_min_z_v = int(resolution[1] / 2)
@@ -123,6 +143,7 @@ while(True):
 		# calculating error and sending result to raspberry pi to run motors
 		e_x = int(new_resolution[1] / 2 - avg_min_z_u)
 		e_z = min_val
+		print(e_z)
 		s.sendto(bytes(str(e_x) + ";" + str(int(e_z / 10)), "utf-8"), addr) #signifying hug command with ";" to limit size of message
 	# for contour in contours:
 	# 	mean_u = int(np.mean(contour[:, 0, 0]))
