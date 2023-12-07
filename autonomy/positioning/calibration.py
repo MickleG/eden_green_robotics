@@ -10,7 +10,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     switch4 = 6 #gpio 6
     #switch5 = 12 #gpio12 ***** REASSIGN THIS VALUE ******
 
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(GPIO.BCM)
     
     GPIO.setup(switch1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #left actuator outer
     GPIO.setup(switch2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #left actuator inner
@@ -68,7 +68,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     RC_Pos = 0 # set right position to 0
     GPIO.output(rmd, GPIO.LOW) # reverse direction
 
-    sleep(1)
+    time.sleep(1)
 
 
 
