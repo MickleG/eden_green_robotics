@@ -10,7 +10,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     switch4 = 6 #gpio 6
     #switch5 = 12 #gpio12 ***** REASSIGN THIS VALUE ******
 
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(GPIO.BCM)
     
     GPIO.setup(switch1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #left actuator outer
     GPIO.setup(switch2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #left actuator inner
@@ -23,7 +23,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     GPIO.setup(rmp, GPIO.OUT) #right motor pulse
     GPIO.setup(rmd, GPIO.OUT) #left motor dir
 
-    delay = 0.000030 # delay between steps in seconds
+    delay = 0.0000030 # delay between steps in seconds
     
     microStep = 3200.0 # number of steps per revolution
     mmPerRev = 12.5 # based on pitch of threaded stainless steel rod (IGUS)
@@ -68,7 +68,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     RC_Pos = 0 # set right position to 0
     GPIO.output(rmd, GPIO.LOW) # reverse direction
 
-    sleep(1)
+    time.sleep(1)
 
 
 
