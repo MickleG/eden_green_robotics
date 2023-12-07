@@ -23,7 +23,7 @@ def positionCalibrate(lmp, lmd, rmp, rmd): # left motor pulse, left motor dir...
     GPIO.setup(rmp, GPIO.OUT) #right motor pulse
     GPIO.setup(rmd, GPIO.OUT) #left motor dir
 
-    delay = 0.000030 # delay between steps in seconds
+    delay = 0.0000030 # delay between steps in seconds
     
     microStep = 3200.0 # number of steps per revolution
     mmPerRev = 12.5 # based on pitch of threaded stainless steel rod (IGUS)

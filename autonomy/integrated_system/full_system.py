@@ -36,7 +36,7 @@ avg_min_z_u = None
 avg_min_z_v = None
 TARGET_Z = 75
 
-run_calibration = True
+cup_offset = 50 # value used to determine where to filter z
 
 resolution = [424, 240]
 finding_cup = False
@@ -60,30 +60,8 @@ while(True):
 
 	depth_image, color_image, cup_mask, cup_u_indices, cup_v_indices = depth_stream(pipe)
 
-	### collect fiducial image ###
-
-	### if(run_calibration):
-	###		do calibration
-	###		run_calibration = False
-	###send message to rpi to perform cut using s.sendto() otherwise known as socket
-
-	### if(gripped):
-	###		send true message
-	###		check if cut
-	###		if(cut_success):
-
-
-
-	# contours, hierarchy = cv2.findContours(cup_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
 	depth_image = depth_image[0:resolution[1], int(resolution[0] / 3):int(resolution[0] * 2 / 3)]
 	color_image = color_image[0:resolution[1], int(resolution[0] / 3):int(resolution[0] * 2 / 3)]
-
-	# cv2.imshow('depth image', depth_image)
-
-	# depth_image = cv2.GaussianBlur(depth_image, (5, 5), 0)
-
-	# cv2.imshow('blurred image', depth_image)
 
 	new_resolution = depth_image.shape
 
@@ -101,56 +79,24 @@ while(True):
 		avg_cup_u = None
 		avg_cup_v = None
 
-		# min_val = np.min(depth_image[np.nonzero(depth_image)])
-		min_val = 1600
-		min_z_indices = list(zip(*np.where(depth_image <= min_val)))
+		a = np.array(depth_image)
 
-		mask = np.zeros(depth_image.shape, dtype="uint8")
-		mask[min_z_indices] = True
+		min_val = np.min(depth_image[np.nonzero(depth_image)]) + cup_offset * 10 # this value shows the cutoff for points to take the x-centroid at
 
-		counter = 0
-
-		# print(mask)
-
-		for val in mask[0]:
-			if(val == 1):
-				counter += 1
-
-		print(counter)
-
-		new_img = cv2.bitwise_and(color_image, color_image, mask=mask)
-
-		cv2.imshow('clipped image', new_img)
-
-		time.sleep(10)
-
-		break
-
-		# min_z_v = min_z_index[0][0]
-		# min_z_u = min_z_index[0][1]
-
-		# if(len(min_z_u_storage) < 1):
-		# 	min_z_u_storage.append(min_z_u)
-		# 	continue
-		# if(len(min_z_u_storage) == 1):
-		# 	min_z_u = int((min_z_u + min_z_u_storage[0]) / 2)
-
-		avg_min_z_u = min_z_u
-		# avg_min_z_v = int(resolution[1] / 2)
-		avg_min_z_v = min_z_v
+		filtered_depth_image = np.where(np.array(depth_image) < min_val, np.array(depth_image), 0)
+		avg_min_z_u = int(np.array(list(map(list, zip(*np.nonzero(filtered_depth_image))))).mean(axis=0)[1])
+		avg_min_z_v = int(new_resolution[0] / 2)
 
 
 		# calculating error and sending result to raspberry pi to run motors
 		e_x = int(new_resolution[1] / 2 - avg_min_z_u)
 		e_z = min_val
-		print(e_z)
+		# print(e_z)
 		s.sendto(bytes(str(e_x) + ";" + str(int(e_z / 10)), "utf-8"), addr) #signifying hug command with ";" to limit size of message
-	# for contour in contours:
-	# 	mean_u = int(np.mean(contour[:, 0, 0]))
-	# 	mean_v = int(np.mean(contour[:, 0, 1]))
-	# 	color_image = cv2.circle(color_image, (mean_u, mean_v), radius=3, color=[0, 0, 255], thickness=-1)
+
 	color_image = cv2.circle(color_image, (avg_cup_u, avg_cup_v), radius=2, color=[0, 255, 0], thickness=-1)
 	color_image = cv2.circle(color_image, (avg_min_z_u, avg_min_z_v), radius=2, color=[0, 0, 255], thickness=-1)
+
 
 	# result = cv2.bitwise_and(depth_image, depth_image, mask=cup_mask)
 
