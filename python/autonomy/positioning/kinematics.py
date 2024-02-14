@@ -1,6 +1,5 @@
-import math;
-import pyautogui;
-import time;
+import math
+import time
 
 def Kinematics(left_motor, right_motor): # get stepper positions from desired XZ cords
 
@@ -27,7 +26,7 @@ def Kinematics(left_motor, right_motor): # get stepper positions from desired XZ
     centerX = (A + B) / 2
     Ax = (A*-1) + (centerX - EndEffect)
 
-    Z_End = (math.sqrt((Length**2) - (Ax**2))) + 20
+    Z_End = (math.sqrt((Length**2) - (Ax**2))) + 14 - 40
 
     return centerX, Z_End
 
