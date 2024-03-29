@@ -10,16 +10,18 @@ sys.path.append("/autonomy/gripping")
 from open_grip import open_grip
 from close_grip import close_grip
 
-valve = OutputDevice(pin=15)
+valve = OutputDevice(pin=16)
 
 cut=False
 close_grip()
 time.sleep(1)
 
-while cut = False
+while not cut:
     valve.on()
     cut = input("is cut made?(y/n)")
     if cut == "y":
-open_grip()
+        cut = True
+    valve.off()
+    time.sleep(0.5)    
 
 

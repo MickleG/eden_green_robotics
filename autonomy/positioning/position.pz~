@@ -10,17 +10,17 @@ import time
 #s2 = OutputDevice(pin=4)
 #d2 = OutputDevice(pin=27)
 
-def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switchLO):
+def calibrateZero(step1, dir1, step2, dir2):
 
     # ensure no direction is outward to avoid breaking mechanism
     dir1.on()
     dir2.on()
 
     # define limit switches
-    #switchRO = Button(2, pull_up = True)
-    #switchRI = Button(3, pull_up = True)
-    #switchLI = Button(1, pull_up = True)
-    #switchLO = Button(0, pull_up = True)
+    switchRO = Button(2)
+    switchRI = Button(3)
+    switchLI = Button(1)
+    switchLO = Button(0)
 
     microsteps = 3200
     mmPerRev = 25
@@ -29,7 +29,7 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
     rightcount = 0
 
     accRevs = 0.5
-    minTimeDelay = 0.00006
+    minTimeDelay = 0.00003
     maxTimeDelay = 0.0003
     accStep = accRevs * microsteps
 
@@ -40,7 +40,7 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
     #extend left
     dir1.on()
 
-    accelerate(step1, dir1, accRevs, minTimeDelay, maxTimeDelay)
+    accelerate(switchLO, switchLI, switchRI, switchRO, step1, dir1, accRevs, minTimeDelay, maxTimeDelay)
 
     left_count = accStep
     
@@ -64,7 +64,7 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
         left_position += 1
         time.sleep(minTimeDelay)
 
-    decelerate(step1, dir1, accRevs, minTimeDelay, maxTimeDelay)
+    decelerate(switchLO, switchLI, switchRI, switchRO, step1, dir1, accRevs, minTimeDelay, maxTimeDelay)
 
     left_position += (accStep)
 
@@ -76,7 +76,7 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
     #extend right   
     dir2.on()
 
-    accelerate(step2, dir2, accRevs, minTimeDelay, maxTimeDelay)
+    accelerate(switchLO, switchLI, switchRI, switchRO, step2, dir2, accRevs, minTimeDelay, maxTimeDelay)
 
     right_count = accStep  # initialize position after
     
@@ -100,7 +100,7 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
         right_position +=1
         time.sleep(minTimeDelay)
 
-    decelerate(step2, dir2, accRevs, minTimeDelay, maxTimeDelay)
+    decelerate(switchLO, switchLI, switchRI, switchRO, step2, dir2, accRevs, minTimeDelay, maxTimeDelay)
 
     right_position += (accStep)
 
@@ -110,12 +110,12 @@ def calibrateZero(step1, dir1, step2, dir2, switchRO, switchRI, switchLI, switch
 
     
 
-def center(step1, dir1, step2, dir2, left_position, right_position, switchRO, switchRI, switchLI, switchLO):
+def center(step1, dir1, step2, dir2, left_position, right_position):
 
-    #switchRO = Button(2)
-    #switchRI = Button(3)
-    #switchLI = Button(1)
-    #switchLO = Button(0)
+    switchRO = Button(2)
+    switchRI = Button(3)
+    switchLI = Button(1)
+    switchLO = Button(0)
 
     center_steps = abs(left_position - right_position)/2
     print("CENTER P")
@@ -172,7 +172,7 @@ def center(step1, dir1, step2, dir2, left_position, right_position, switchRO, sw
 
 
 
-def accelerate(step1, dir1, revs, timeDelayMin, timeDelayMax, switchLO, switchLI, switchRI, switchRO):
+def accelerate(switchLO, switchLI, switchRI, switchRO, step1, dir1, revs, timeDelayMin, timeDelayMax):
 
     #switchLO = Button(2)
     #switchLI = Button(3)
@@ -197,7 +197,7 @@ def accelerate(step1, dir1, revs, timeDelayMin, timeDelayMax, switchLO, switchLI
         time.sleep(timeDelay)
 
 
-def decelerate(step1, dir1, revs, timeDelayMin, timeDelayMax, switchLO, switchLI, switchRI, switchRO):
+def decelerate(switchLO, switchLI, switchRI, switchRO, step1, dir1, revs, timeDelayMin, timeDelayMax):
 
     #switchLO = Button(2)
     #switchLI = Button(3)
@@ -221,86 +221,11 @@ def decelerate(step1, dir1, revs, timeDelayMin, timeDelayMax, switchLO, switchLI
 
         time.sleep(timeDelay)
 
-def forward(step1, dir1, step2, dir2, revs):
-    
-
-    sRev = 3200
-    steps = revs*sRev
-
-    switchRO = Button(2)
-    switchRI = Button(3)
-    switchLI = Button(1)
-    switchLO = Button(0)
-
-    counter = 0
-
-    while (count < steps) and not(switchLO.is_pressed or switchLI.is_pressed or switchRI.is_pressed or switchRO.is_pressed):
-
-        step1.on()
-        step2.on()
-        step1.off()
-        step2.off()
-
-        delay(0.00003)
-
-
-def back(step1, dir1, step2, dir2, revs, switchRO, switchRI, switchLI, switchLO):
-
-    dir1.off()
-    dir2.off()
-
-    sRev = 3200
-    steps = revs*sRev
-
-    #switchRO = Button(2)
-    #switchRI = Button(3)
-    #switchLI = Button(1)
-    #switchLO = Button(0)
-
-    counter = 0
-
-    while (count < steps) and not(switchLO.is_pressed or switchLI.is_pressed or switchRI.is_pressed or switchRO.is_pressed):
-
-        step1.on()
-        step2.on()
-        step1.off()
-        step2.off()
-
-        delay(0.00003)
-
-        
-
 
 ### RUN ###
-
- # define limit switches
-
-#switchRO = Button(2)
-#switchRI = Button(3)
-#switchLI = Button(1)
-#switchLO = Button(0)
-
-#time.sleep(1)
-
-
-
-
-
 #positions = calibrateZero(s1, d1, s2, d2)
 
-
-
-
-#center1 = center(s1, d1, s2, d2, positions[0], positions[1])
-
-#d1.on()
-#acc1 = accelerate(s1, d1, 1, 0.00003, 0.0003)
-
-#d1.on()
-#acc1 = decelerate(s1, d1, 1, 0.00003, 0.0003)
-
 #print(positions)
-#print(center1)
 
 #time.sleep(2)
 

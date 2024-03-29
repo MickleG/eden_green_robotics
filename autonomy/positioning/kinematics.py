@@ -28,18 +28,18 @@ def Kinematics(left_motor, right_motor): # get stepper positions from desired XZ
 
     Z_End = (math.sqrt((Length**2) - (Ax**2))) + 14 - 40
 
-    return centerX, Z_End
+    return Z_End
 
 
-mmRev = float(25)
-stepRev = float(3200)
+#mmRev = float(25)
+#stepRev = float(3200)
 
-rightMM = ((220) / (mmRev)) * stepRev
-leftMM = ((220) / (mmRev)) * stepRev
+#rightMM = ((220) / (mmRev)) * stepRev
+#leftMM = ((220) / (mmRev)) * stepRev
     
-cords = Kinematics(rightMM, leftMM)
+#cords = Kinematics(rightMM, leftMM)
 
-print("\nX Position :   " + str(round(cords[0],4)))
-print("Z Position :   " + str(round(cords[1],4)))
+#print("\nX Position :   " + str(round(cords[0],4)))
+#print("Z Position :   " + str(round(cords[1],4)))
 
 

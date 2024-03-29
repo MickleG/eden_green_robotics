@@ -119,3 +119,5 @@ def open_grip():
 
     # Close port
     portHandler.closePort()
+
+open_grip()

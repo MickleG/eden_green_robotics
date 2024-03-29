@@ -9,7 +9,7 @@ def harvest():
     import time
     from gpiozero import OutputDevice
 
-    valve = OutputDevice(pin=15)
+    valve = OutputDevice(pin=16)
     cut = False
 
     if os.name == 'nt':
@@ -104,10 +104,14 @@ def harvest():
     time.sleep(0.5)
 
     while not cut: 
-        valve.off()
-        cut = input("is cut made? (y/n)")
-        if cut == "y":
+        valve.on()
+        cut_done = input("is cut made? (y/n)")
+        if cut_done == "y":
             cut = True
+            valve.off()
+            break
+        else: 
+            cut = False
         valve.off()
         time.sleep(0.7)
     #    while(True):
@@ -130,4 +134,3 @@ def harvest():
     # Close port
     portHandler.closePort()
 
-harvest()

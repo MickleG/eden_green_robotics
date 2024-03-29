@@ -1,8 +1,5 @@
 import os
 import time
-from gpiozero import OutputDevice
-
-valve = OutputDevice(pin=16)
 
 if os.name == 'nt':
     import msvcrt
@@ -153,9 +150,9 @@ while 1:
 #    while(True):
  #       result = input("perform cut? (y/n)")
   #      if(result == "y"):
-            valve.on()
-            time.sleep(0.5)
-            valve.off()
+#            valve.on()
+ #           time.sleep(0.5)
+  #          valve.off()
 
       #      result = input("done with cut? (y/n)")
        #     if(result == "y"):

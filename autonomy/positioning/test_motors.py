@@ -9,15 +9,17 @@ import time
 microsteps = 3200
 mmPerRev = 25
 
+#time.sleep(.1)
+
 step1 = OutputDevice(pin=17)
 dir1 = OutputDevice(pin=18)
 step2 = OutputDevice(pin=4)
 dir2 = OutputDevice(pin=27)
 
-switchLO = Button(2)
-switchLI = Button(3)
-switchRI = Button(1)
-switchRO = Button(0)
+#switchLO = Button(2, pull_up = True)
+#switchLI = Button(3, pull_up = True)
+#switchRI = Button(1, pull_up = True)
+#switchRO = Button(0, pull_up = True)
 
 
 def calibrate():
@@ -106,8 +108,19 @@ def calibrate():
 
     return left_motor, right_motor
 
+time.sleep(.1)
 
-calibrate()
+steps = 0
+dir1.on()
+
+while steps < 3200:
+    step1.on()
+    step1.off()
+    steps += 1
+
+    time.sleep(0.00003)
+
+#calibrate()
 
 
 
