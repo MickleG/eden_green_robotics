@@ -66,6 +66,7 @@ int main(void)
                 delay(timeDelay); // Wait 75ms again
 
             }
+	    //printf("DIRECTION : %d\n", digitalRead(rightDirPin));
 
 	    digitalWrite(rightDirPin, flipDir(rightDirPin));
 	}
