@@ -18,14 +18,6 @@ class MotorConfig
     private: 
 
         // internal functions
-
-        const float deadBandSpeed = 1.0; 
-        const uint64_t debounceTime = 1000000; // 1 ms
-        float goalAcceleration = 0.1; // m/s per step
-
-        uint64_t accTime; // nanoseconds -- logged when acceleration added to speed
-        uint64_t accInterval = 1000000; // nanoseconds -- interval to increase currentSpeed
-
         // get time in nanoseconds based on monatonic clock (more accurate)
         uint64_t nanos()
         {
@@ -39,42 +31,6 @@ class MotorConfig
 
     // public member function    
     public:
-
-        //** RPI hardware configuration **//
-
-        uint8_t stepPin; // needs to be pulsed between HIGH and LOW to achieve motion
-        uint8_t dirPin; // HIGH = Drives INWARD (towards stepper motor) || LOW = Drives OUTWARD (away from stepper motor)
-
-        uint8_t limitInside; // needs to be pulsed between HIGH and LOW to achieve motion
-        uint8_t limitOutside; // HIGH = Drives INWARD (towards stepper motor) || LOW = Drives OUTWARD (away from stepper motor)
-        
-        //** Time Step for accurate pulsing of stepper motors in nanoseconds **//
-        
-        uint64_t currentTimeStep; // nanoseconds -- logged at the beggining of motor control loop function
-        uint64_t prevTimeStep; // nanoseconds -- logged immediately after a pulse has happened
-        uint64_t limTimeStep; // nanoseconds -- logged immediately after limit switch is triggered, used for debounce time
-
-        //** Current Motor Characteristics **//
-
-        bool phase; // phase of stepper motor (High 1 or Low 0) to power coils during actuation
-
-        bool switchPress; // whether any switches are actively pressed (regardless of debounce logic) -- used during debounce determination in control loop
-
-        uint32_t currentDelay; // nanoseconds -- this indicates the speed of stepper motor and is updated with setSpeed funciton  (must be between Max and MinDelay)
-        uint16_t stepCount; // microsteps -- configured automatically during calibration by using limit switch as physical reference, updated every time step is pulsed 
-        int8_t motorDir; // 1 for inward velocity  ||  -1 for outward velocity
-        int8_t driveState; // 0 = both hit | 1 = drive | 2 = inner drive | -1 = outer drive
-        
-        float currentSpeed; // -160 to 160 set by setSpeed() (mm/s)
-        float goalSpeed; // 0 to 160 set by setSpeedMagnitude() (mm/s)
-        float acceleration = 0.01; // mm/s/ms (determined by acc interval, which is currently set to 1 ms)
-
-        uint16_t goalStepPosition;
-        int32_t goalSteps;
-        uint16_t remainingSteps;
-        uint16_t accSteps;
- 
-        bool findingTarget; // boolean for if motor is actively seaking a goal position
 
         // INSTANCE MODIFIERS // 
 
@@ -117,6 +73,7 @@ class MotorConfig
             driveState = 1;
             stepCount = 0; 
             accSteps = 0;
+            acceleration = 0.1;
 
             setSpeed(0);
 
@@ -151,6 +108,7 @@ class MotorConfig
             driveState = 1; // initialize driveState to normal (should be initialized to 1 after calibration) 
             stepCount = 0; // intialize motor position
             accSteps = 0;
+            acceleration = 0.1;
 
             setSpeed(0);
         }
@@ -159,14 +117,15 @@ class MotorConfig
         {
             prevTimeStep = nanos(); // sets initial pulse time instance
             limTimeStep = nanos(); // sets initial limit trigger time instance 
-            currentTimeStep = nanos();
-            accTime = nanos();
+            currentTimeStep = nanos(); // intialize current time step
+            accTime = nanos(); // intialize acceleration time step
 
             phase = 0; // initialize stepper motor phase
             switchPress = 0; // assume no switches are pressed during startup
             driveState = 1; // initialize driveState to normal (should be initialized to 1 after calibration) 
             stepCount = 0; // initialize motor position to 0 (waiting on calibration)
             accSteps = 0;
+            acceleration = 0.1;
 
             setSpeed(0); // ensuring setSpeed is at 0 so motors dont run when control loop starts
         }
