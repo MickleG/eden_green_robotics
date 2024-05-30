@@ -1,14 +1,13 @@
 #include <stdio.h> 
 #include <stdlib.h>
-#include <wiringPi.h>   // Include WiringPi library!
 #include <time.h>       // For NANOS function
 #include <iostream>
 #include <cmath>        // For sqrt and other math functions
 
-#include <ENDEFFECTORCONFIG.h>
-#include <MOTORCONFIG.h>
+#include <EndEffectorConfig.h>
+#include <MotorConfig.h>
 #include <XM430.h>
-#include <CUTTER.h>
+#include <Cutter.h>
 
 using namespace std;
 

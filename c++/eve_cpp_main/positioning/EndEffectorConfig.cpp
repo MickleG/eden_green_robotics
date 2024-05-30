@@ -1,11 +1,5 @@
-#include <stdio.h> 
-#include <stdlib.h>
-#include <wiringPi.h>   // Include WiringPi library!
-#include <time.h>       // For NANOS function
-#include <iostream>
-#include <cmath>        // For sqrt and other math functions
-
-#include <MOTORCONFIG.h>
+// include header file for this Class
+#include <EndEffectorConfig.h>
 
 using namespace std;
 
