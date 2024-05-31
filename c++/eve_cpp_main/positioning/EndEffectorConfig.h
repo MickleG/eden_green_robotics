@@ -46,32 +46,30 @@ class EndEffectorConfig
         float baseLength; // length between outer pins on carriages
         float basePartial; // for right triangle of hypotenuse link length
         
-        float tempMax; // used for temporarily holding max value of rightMotorSpeed and leftMotorSpeed
-
         bool calibrationSuccess; // determines wheteher robot needs calibrated or not
 
         // Instance Modifiers
         EndEffectorConfig(int left, int right); // instance modifier
 
         // set functions
-        void setGlobalAcceleration(float acc);
+        void setGlobalAcceleration(float acc); // sets both left and right acceleration values
 
         // position update functions
-        void updateMotorPosition();
-        void updateCurrentPosition();
+        void updateMotorPosition(); // updates motor position in mm
+        void updateCurrentPosition(); // updates end effector position in mm
 
         // movement fucntions
-        void goToPosition(float xCord, float zCord, float speed);
+        void goToPosition(float xCord, float zCord, float speed); // brings end effector to position specified (built in safety)
 
-        void calibrateZero(float speed);
+        void calibrateZero(float speed); // calibrates motor position
 
-        void moveInX(float speed);
+        void moveInX(float speed); // relative to robot, moves along x axis only
 
-        void moveInZ(float speed);
+        void moveInZ(float speed); // relative to robot, moves along z axis only
 
-        void directionalDrive(float CMD_X_SPEED, float CMD_Z_SPEED);
+        void directionalDrive(float CMD_X_SPEED, float CMD_Z_SPEED); // relative to end effector, will actuate end effector at cmd speeds , which are limited
 
-        void directionalDrive_MAG(float CMD_X_HEADING, float CMD_Z_HEADING, float speed);
+        void directionalDrive_MAG(float CMD_X_HEADING, float CMD_Z_HEADING, float speed); // drives at heading specified (unit vector) and applies speed proportionally to faster motor
 };
 
 #endif // ENDEFFECTORCONFIG_H

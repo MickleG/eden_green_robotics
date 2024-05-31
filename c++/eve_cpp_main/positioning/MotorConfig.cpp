@@ -301,7 +301,7 @@ class MotorConfig
             {
                 case 1:
 
-                    motorDrive(); // run the motor at setspeed unless switch is determed to be pressed in the line below
+                    motorDrive(); // run the motor at setspeed until switch is determed to be pressed in the line below
 
                     if(!innerSwitch || !outerSwitch)
                     {
@@ -332,7 +332,7 @@ class MotorConfig
                         if (motorDir < 0) { motorDrive(); } // only allows travel in opposite direction to outside switch 
                         else {currentSpeed = 0;} // report 0 motor speed even though speed commanded might be positive
 
-                        if (!outerSwitch) { driveState = 0; }
+                        if (!innerSwitch) { driveState = 0; }
 
                         limTimeStep = nanos();
                     }
@@ -442,7 +442,7 @@ class MotorConfig
             if(findingTarget)
             {
 
-                remainingSteps = abs(goalStepPosition - stepCount);
+                uint16_t remainingSteps = abs(goalStepPosition - stepCount);
 
                 if((remainingSteps > (goalSteps / 2)) && (currentSpeed < goalSpeed))
                 {

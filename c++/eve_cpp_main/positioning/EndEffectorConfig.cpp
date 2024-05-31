@@ -266,7 +266,8 @@ class EndEffectorConfig
             rightMotorSpeed = (CMD_X_HEADING) - (CMD_Z_HEADING * (sqrt((linkLength * linkLength) - (basePartial * basePartial)) / basePartial)); // where CMDXDIR = dx/dt and CMDZDIR = dz/dt > finding dRM/dt (this value * 1.6 = mm/s)
             leftMotorSpeed = ((2 * CMD_X_HEADING) - rightMotorSpeed); // using dRM/dt to get dLM/dt (this value * 1.6 = mm/s)
             
-            tempMax = maxAbs(rightMotorSpeed, leftMotorSpeed); // find the motor with greater speed magnitude
+            float tempMax = maxAbs(rightMotorSpeed, leftMotorSpeed); // find the motor with greater speed magnitude
+            
             rightMotorSpeed = (rightMotorSpeed / tempMax) * speed * -1; // convert motor speed to speed commanded by function input argument "speed" (switch signs)
             leftMotorSpeed = (leftMotorSpeed / tempMax) * speed; // negative to keep frame of reference consistent with right motor (keep sign)
 

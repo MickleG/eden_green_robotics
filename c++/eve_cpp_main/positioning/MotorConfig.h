@@ -38,6 +38,7 @@ public:
     // Current Motor Characteristics
     bool phase;      // phase of stepper motor (High 1 or Low 0) to power coils during actuation
     bool switchPress; // whether any switches are actively pressed (regardless of debounce logic) -- used during debounce determination in control loop
+    
     uint32_t currentDelay; // nanoseconds -- this indicates the speed of stepper motor and is updated with setSpeed function (must be between Max and MinDelay)
     uint16_t stepCount;    // microsteps -- configured automatically during calibration by using limit switch as physical reference, updated every time step is pulsed
     int8_t motorDir;       // 1 for inward velocity  ||  -1 for outward velocity
@@ -49,14 +50,15 @@ public:
 
     uint16_t goalStepPosition;
     int32_t goalSteps;
-    uint16_t remainingSteps;
     uint16_t accSteps;
 
     bool findingTarget; // boolean for if motor is actively seeking a goal position
 
     // Constructors
     MotorConfig(char Side);
+
     MotorConfig(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn);
+
     MotorConfig();
 
     // SET FUNCTIONS
@@ -80,6 +82,7 @@ public:
     void moveOut(uint64_t delay); // no limit sw monitoring
     
     void motorDrive(); // TO BE USED IN CONTROL LOOP -- decides when its time to step the motor based on setSpeed, keeps track of position as well
+    
     void controlLoop(); // TO BE USED IN ROS Motor Control NODE -- update at 1GHz->2GHz
 
     // Goal and acceleration functions
