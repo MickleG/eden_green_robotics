@@ -48,9 +48,9 @@ public:
     float goalSpeed;    // 0 to 160 set by setSpeedMagnitude() (mm/s)
     float acceleration; // mm/s/ms (determined by acc interval, which is currently set to 1 ms)
 
-    uint16_t goalStepPosition;
-    int32_t goalSteps;
-    uint16_t accSteps;
+    uint16_t goalStepPosition; // step position requested by setgoalposiion function
+    int32_t goalSteps; // total steps needed by setgoalposition funct
+    uint16_t accSteps; // steps taken to achieve speed in goalPosition
 
     bool findingTarget; // boolean for if motor is actively seeking a goal position
 
