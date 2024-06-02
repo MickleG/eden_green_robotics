@@ -4,6 +4,7 @@
 #include <time.h>       // For NANOS function
 #include <iostream>
 #include <cmath>        // For sqrt and other math functions
+#include <cstdint>
 
 using namespace std;
 

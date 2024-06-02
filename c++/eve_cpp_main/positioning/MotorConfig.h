@@ -2,11 +2,6 @@
 #define MOTORCONFIG_H
 
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
-#include <stdio.h>
-#include "wiringPi.h"   // Include WiringPi library
-#include <time.h>       // For NANOS function
-#include <cmath>        // For sqrt and other math functions
-#include <iostream>     // For standard I/O streams
 
 class MotorConfig
 {
