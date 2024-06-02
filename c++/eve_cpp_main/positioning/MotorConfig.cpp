@@ -1,5 +1,5 @@
 // include header file for this Class
-#include <MotorConfig.h>
+#include "MotorConfig.h"
 
 using namespace std;
 
