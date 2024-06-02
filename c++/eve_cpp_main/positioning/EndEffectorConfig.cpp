@@ -236,7 +236,7 @@ using namespace std;
         float baseLength = (leftMotorPosition) + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
         float basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
         float tanTheta = sqrt((linkLength * linkLength) - (basePartial * basePartial)) / basePartial; // 
-        float MAX_Z_SPEED = (MAX_X_SPEED + MOTOR_SPEED_MAX) / tanTheta; // highest commanded z value allowed for current position
+        float MAX_Z_SPEED = (MOTOR_SPEED_MAX - MAX_X_SPEED) / tanTheta; // highest commanded z value allowed for current position
 
         if((abs(CMD_X_SPEED) <= MAX_X_SPEED) && (CMD_Z_SPEED <= MAX_Z_SPEED))
         {
