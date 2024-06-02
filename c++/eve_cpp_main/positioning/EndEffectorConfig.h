@@ -15,8 +15,8 @@ class EndEffectorConfig
         const float endOffset = 130.0; // center of end effector to outer linkage pin center
         const float linearStage = 250.0; // mm of travel possible for linear actuators
 
-        float MAX_X_SPEED = 25.0; // mm/s -- during the directionalDrive() function
-        float MAX_Z_SPEED = 100; // mm/s -- during the directionalDrive() function
+        float MAX_X_SPEED = 25.0; // mm/s -- maximum x speed (+ or -) during the directionalDrive() function
+        float MOTOR_SPEED_MAX = 140.0; // mm/s -- maximum motor speed during the directionalDrive() function
 
         float maxAbs(float x, float y);
 
@@ -36,11 +36,11 @@ class EndEffectorConfig
         float xPosition; // end effector position in mm (relative to center of macron)
         float zPosition; // end effeector position in mm
 
-        float xDirection; // x component of direction vector (direction vector = vector of magnitude 1.0)
-        float zDirection; // z component of direction vector (direction vector = vector of magnitude 1.0)
+        //float xDirection; // x component of direction vector (direction vector = vector of magnitude 1.0)
+        //float zDirection; // z component of direction vector (direction vector = vector of magnitude 1.0)
 
-        float baseLength; // length between outer pins on carriages
-        float basePartial; // for right triangle of hypotenuse link length
+        //float baseLength; // length between outer pins on carriages
+        //float basePartial; // for right triangle of hypotenuse link length
         
         bool calibrationSuccess; // determines wheteher robot needs calibrated or not
 

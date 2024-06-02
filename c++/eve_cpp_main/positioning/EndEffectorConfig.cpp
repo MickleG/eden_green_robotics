@@ -53,14 +53,14 @@ using namespace std;
         rightMotorSpeed = 0; // *1.6 = mm/s
         leftMotorSpeed = 0; // *1.6 = mm/s
 
-        baseLength = 0; // length between outer pins on carriages
-        basePartial = 0; // for right triangle of hypotenuse link length
+        //baseLength = 0; // length between outer pins on carriages
+        //basePartial = 0; // for right triangle of hypotenuse link length
 
         xPosition = 0; // relative to center of macron
         zPosition = 0; // relative to motor plane
 
-        xDirection = 0; // right relative to robot = (+)
-        zDirection = 0; // forward relative to robot = (+)
+        //xDirection = 0; // right relative to robot = (+)
+        //zDirection = 0; // forward relative to robot = (+)
 
         calibrationSuccess = 0; // initialize robot to require calibration
 
@@ -85,8 +85,8 @@ using namespace std;
 
         updateMotorPosition();
 
-        baseLength = leftMotorPosition + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
-        basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
+        float baseLength = leftMotorPosition + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
+        float basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
 
         zPosition = sqrt((linkLength * linkLength) - (basePartial * basePartial)) + 20; // current z cord of end effector (dist from outer pin to motor plane)
         xPosition = ((leftMotorPosition*-1) + rightMotorPosition) / 2; // current x cord of end effector relative to center plane of macron rail
@@ -99,7 +99,7 @@ using namespace std;
 
         zCord = zCord - 20.0; // z direction offset -- Frame of reference changed from the motor plane to the outer pin z cordinate with this operation
 
-        baseLength = (2 * sqrt((linkLength * linkLength) - (zCord * zCord))) + (endOffset); // DESIRED base length, not the current
+        float baseLength = (2 * sqrt((linkLength * linkLength) - (zCord * zCord))) + (endOffset); // DESIRED base length, not the current
 
         float goalRightMotorPosition = (((2 * xCord) + baseLength) * 0.5) - carriageOffset; // goal right position in mm ( to be used for next line )
         float goalLeftMotorPosition = (baseLength - goalRightMotorPosition - (2*carriageOffset)); // goal left position in mm
@@ -230,14 +230,17 @@ using namespace std;
 
     void EndEffectorConfig::directionalDrive(float CMD_X_SPEED, float CMD_Z_SPEED) // drives at set direction and speed (needs to be actively updating every step)
     {
-        if((abs(CMD_X_SPEED) <= MAX_X_SPEED) && (abs(CMD_Z_SPEED) <= MAX_Z_SPEED))
-        {
-            updateMotorPosition();
 
-            baseLength = (leftMotorPosition) + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
-            basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
-            
-            rightMotorSpeed = (CMD_X_SPEED) - (CMD_Z_SPEED * (sqrt((linkLength * linkLength) - (basePartial * basePartial)) / basePartial)); // where CMDXDIR = dx/dt and CMDZDIR = dz/dt > finding dRM/dt (this value * 1.6 = mm/s)
+        updateMotorPosition();
+
+        float baseLength = (leftMotorPosition) + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
+        float basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
+        float tanTheta = sqrt((linkLength * linkLength) - (basePartial * basePartial)) / basePartial; // 
+        float MAX_Z_SPEED = (MAX_X_SPEED + MOTOR_SPEED_MAX) / tanTheta; // highest commanded z value allowed for current position
+
+        if((abs(CMD_X_SPEED) <= MAX_X_SPEED) && (CMD_Z_SPEED <= MAX_Z_SPEED))
+        {
+            rightMotorSpeed = (CMD_X_SPEED) - (CMD_Z_SPEED * tanTheta); // where CMDXDIR = dx/dt and CMDZDIR = dz/dt > finding dRM/dt (this value * 1.6 = mm/s)
             leftMotorSpeed = ((2 * CMD_X_SPEED) - rightMotorSpeed); // using dRM/dt to get dLM/dt (this value * 1.6 = mm/s)
 
             leftMotor.setSpeed(leftMotorSpeed); // declaring left motor speed
@@ -266,8 +269,8 @@ using namespace std;
     {
         updateMotorPosition();
 
-        baseLength = (leftMotorPosition) + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
-        basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
+        float baseLength = (leftMotorPosition) + (carriageOffset * 2) + rightMotorPosition; // distance between left carriage and right carriage
+        float basePartial = (baseLength - endOffset) * 0.5; // right triangle component along linear actuator axis (linkage length is hyptenuse, z cord is height)
         
         rightMotorSpeed = (CMD_X_HEADING) - (CMD_Z_HEADING * (sqrt((linkLength * linkLength) - (basePartial * basePartial)) / basePartial)); // where CMDXDIR = dx/dt and CMDZDIR = dz/dt > finding dRM/dt (this value * 1.6 = mm/s)
         leftMotorSpeed = ((2 * CMD_X_HEADING) - rightMotorSpeed); // using dRM/dt to get dLM/dt (this value * 1.6 = mm/s)
