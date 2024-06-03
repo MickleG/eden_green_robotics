@@ -33,9 +33,11 @@ int main()
     EndEffectorConfig mechanism(0, 0); // defines the positioning mechanism
 
 
-    while(true) {
-        printf("left motor driveState: %d\n", mechanism.leftMotor.driveState);
-    }
+    // while(true) {
+    //     mechanism.leftMotor.controlLoop();
+    //     mechanism.rightMotor.controlLoop();
+    //     printf("right motor driveState: %d\n", mechanism.rightMotor.driveState);
+    // }
     // UPDATE Y STAGE PINS
     //MotorConfig yStage(-1, -1, -1, -1); // defines the y stage motor, will need to determine if up/down is positive or negative speed
 

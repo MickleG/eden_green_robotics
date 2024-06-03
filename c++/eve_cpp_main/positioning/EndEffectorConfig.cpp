@@ -159,10 +159,6 @@ using namespace std;
     {
         rightMotor.setSpeed(0);
         leftMotor.setSpeed(0);
-
-        cout << "correct function" << endl;
-        cout << "left motor: " << leftMotor.driveState << endl;
-        cout << "right motor: " << rightMotor.driveState << endl;
  
         // ping outer right switch
         while (leftMotor.driveState == 1 && rightMotor.driveState == 1) // monitor unitl limit switch is pressed
@@ -188,7 +184,7 @@ using namespace std;
                 rightMotor.controlLoop(); // run right motor
             }
 
-            if(leftMotor.driveState == -1 && calibrationSuccess)
+            if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
                 calibrationSuccess = 1;
