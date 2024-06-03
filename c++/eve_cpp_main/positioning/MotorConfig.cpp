@@ -315,7 +315,7 @@ using namespace std;
 
                     else if (currentTimeStep - limTimeStep > debounceTime)
                     {
-                        driveState = ((2 * limitOutside) - limitInside); // will determine which precise state we are in
+                        driveState = ((2 * outerSwitch) - innerSwitch); // will determine which precise state we are in
                     }
                 }
 
@@ -377,7 +377,7 @@ using namespace std;
 
                 if ((currentTimeStep - prevTimeStep) > debounceTime) // 1ms debounce time
                 {
-                    driveState = ((2 * digitalRead(limitOutside)) - digitalRead(limitInside)); // re-evaluate drivestate during debounce if both limit switches are pressed
+                    driveState = ((2 * outerSwitch) - innerSwitch); // re-evaluate drivestate during debounce if both limit switches are pressed
                 }
 
                 else{currentSpeed = 0;} // stop -- this would be if both limit switches were held down
