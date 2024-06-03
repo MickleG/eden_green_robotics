@@ -172,28 +172,28 @@ using namespace std;
         if(rightMotor.driveState == -1)
         {
             rightMotor.setStepPosition(32000-256); // because the switch usually hits about 2 mm from actually touching end
-            calibrationSuccess = 1;
+
+             // ping outer left switch
+            while (leftMotor.driveState == 1 && rightMotor.driveState != 2) // monitor until limit switch is pressed
+            {
+                leftMotor.setSpeed(speed*-1); // set left motor to drive left
+                rightMotor.setSpeed(speed); // set right motor to drive left
+
+                leftMotor.controlLoop(); // run left motor
+                rightMotor.controlLoop(); // run right motor
+            }
+
+            if(leftMotor.driveState == -1 && calibrationSuccess)
+            {
+                leftMotor.setStepPosition(32000-256);
+                calibrationSuccess = 1;
+
+                goToPosition(0, 100, 50);
+            }
+
+            else { calibrationSuccess = 0; }
         }
 
-        // ping outer left switch
-        while (leftMotor.driveState == 1 && rightMotor.driveState == 1) // monitor until limit switch is pressed
-        {
-            leftMotor.setSpeed(speed*-1); // set left motor to drive left
-            rightMotor.setSpeed(speed); // set right motor to drive left
-
-            leftMotor.controlLoop(); // run left motor
-            rightMotor.controlLoop(); // run right motor
-        }
-
-        if(leftMotor.driveState == -1 && calibrationSuccess)
-        {
-            leftMotor.setStepPosition(32000-256);
-            calibrationSuccess = 1;
-
-            goToPosition(0, 100, 50);
-        }
-
-        else { calibrationSuccess = 0; }
         
     }
 
