@@ -3,6 +3,7 @@
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
 #include <stdio.h>      // For printf statements
 #include <stdlib.h>
+#include <iostream>
 #include <time.h>       // For NANOS function
 #include <cmath>        // For sqrt and other math functions
 #include "MotorConfig.h"// For MotorConfig class and functions
@@ -159,6 +160,10 @@ using namespace std;
         rightMotor.setSpeed(0);
         leftMotor.setSpeed(0);
 
+        cout << "correct function" << endl;
+        cout << "left motor: " << leftMotor.driveState << endl;
+        cout << "right motor: " << rightMotor.driveState << endl;
+ 
         // ping outer right switch
         while (leftMotor.driveState == 1 && rightMotor.driveState == 1) // monitor unitl limit switch is pressed
         {

@@ -5,6 +5,7 @@
 #include <cmath>        // For sqrt and other math functions
 #include <time.h>
 #include <wiringPi.h>
+#include <iostream>
 
 #include <EndEffectorConfig.h>
 #include <MotorConfig.h>
@@ -31,6 +32,10 @@ int main()
 
     EndEffectorConfig mechanism(0, 0); // defines the positioning mechanism
 
+
+    while(true) {
+        printf("left motor driveState: %d\n", mechanism.leftMotor.driveState);
+    }
     // UPDATE Y STAGE PINS
     //MotorConfig yStage(-1, -1, -1, -1); // defines the y stage motor, will need to determine if up/down is positive or negative speed
 
