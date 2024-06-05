@@ -189,7 +189,7 @@ using namespace std;
                 leftMotor.setStepPosition(32000-256);
                 calibrationSuccess = 1;
 
-                goToPosition(0, 100, 50);
+                goToPosition(0, 100, 100);
             }
 
             else { calibrationSuccess = 0; }
