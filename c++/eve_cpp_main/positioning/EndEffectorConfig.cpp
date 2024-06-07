@@ -98,6 +98,7 @@ using namespace std;
     {
         updateMotorPosition();
 
+
         zCord = zCord - 20.0; // z direction offset -- Frame of reference changed from the motor plane to the outer pin z cordinate with this operation
 
         float baseLength = (2 * sqrt((linkLength * linkLength) - (zCord * zCord))) + (endOffset); // DESIRED base length, not the current
@@ -143,14 +144,16 @@ using namespace std;
             leftMotor.setGoalPosition(goalLeftMotorPosition, abs(leftMotorSpeed)); // use this function to set characteristics of goal position movement
             rightMotor.setGoalPosition(goalRightMotorPosition, abs(rightMotorSpeed));
 
-            while(rightMotor.findingTarget || leftMotor.findingTarget) 
+            while(rightMotor.findingTarget || leftMotor.findingTarget)
             {
                 leftMotor.goalPosition(); // always use goalPosition() in a loop, as "controlLoop" is not in a while loop in goalPosition() and is called based on condition
                 rightMotor.goalPosition();
+                motorMoving = true;
             }
         }
 
         updateCurrentPosition();
+        motorMoving = false;
 
     }
 
@@ -187,6 +190,31 @@ using namespace std;
             if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
+                calibrationSuccess = 1;
+
+                goToPosition(0, 100, 100);
+            }
+
+            else { calibrationSuccess = 0; }
+        }
+
+        if(leftMotor.driveState == 2)
+        {
+            leftMotor.setStepPosition(0+256); // because the switch usually hits about 2 mm from actually touching end
+
+             // ping inner right switch
+            while (rightMotor.driveState == 1 && leftMotor.driveState != -1) // monitor until limit switch is pressed
+            {
+                leftMotor.setSpeed(speed*-1); // set left motor to drive left
+                rightMotor.setSpeed(speed); // set right motor to drive left
+
+                leftMotor.controlLoop(); // run left motor
+                rightMotor.controlLoop(); // run right motor
+            }
+
+            if(rightMotor.driveState == 2)
+            {
+                rightMotor.setStepPosition(0+256);
                 calibrationSuccess = 1;
 
                 goToPosition(0, 100, 100);

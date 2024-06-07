@@ -1,8 +1,14 @@
 #ifndef ENDEFFECTORCONFIG_H
 #define ENDEFFECTORCONFIG_H
 
+
+#include <atomic>
+#include <thread>
+
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
 #include "MotorConfig.h"// For MotorConfig class and functions
+
+
 
 class EndEffectorConfig 
 {
@@ -35,6 +41,11 @@ class EndEffectorConfig
 
         float xPosition; // end effector position in mm (relative to center of macron)
         float zPosition; // end effeector position in mm
+
+        float xCord = 0;
+        float zCord = 0;
+
+        bool motorMoving = false;
 
         //float xDirection; // x component of direction vector (direction vector = vector of magnitude 1.0)
         //float zDirection; // z component of direction vector (direction vector = vector of magnitude 1.0)

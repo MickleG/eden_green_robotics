@@ -1,13 +1,12 @@
 # Variables
 CC = g++
 CFLAGS = -Wall -g
-LIBS = -lwiringPi -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lrealsense2
 
-# Include directories for OpenCV and librealsense
-INC_DIRS = -I/usr/local/include/opencv4 -I/usr/local/include/librealsense2
+# Include directories for librealsense
+INC_DIRS = -I/usr/local/include/librealsense2 `pkg-config --cflags opencv4`
 
 # Library directories for OpenCV and librealsense
-LIB_DIRS = -L/usr/local/lib
+LIBS = -lwiringPi -lrealsense2 `pkg-config --libs opencv4`
 
 # Directories
 POS_DIR = positioning
@@ -24,7 +23,7 @@ TARGET = main
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIB_DIRS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 main.o: main.cpp $(HEADERS)
 	$(CC) $(CFLAGS) $(INC_DIRS) -I$(POS_DIR) -c $< -o $@

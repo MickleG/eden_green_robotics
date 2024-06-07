@@ -22,8 +22,8 @@ using namespace cv;
 
 std::atomic<bool> running(true);
 std::atomic<int> goalZ(0);
-double hardware_buffer = 50;
-double deadband_buffer = 5;
+float hardware_buffer = 45;
+float deadband_buffer = 15;
 
 int resolution[2] = {424, 240};
 
@@ -51,10 +51,6 @@ void image_processing() {
 
         rs2::align align_to_color(RS2_STREAM_COLOR);
 
-        rs2::decimation_filter dec_filter;  // Decimation - reduces depth frame density
-        rs2::spatial_filter spat_filter;    // Spatial - edge-preserving spatial smoothing
-        rs2::temporal_filter temp_filter;
-
         while (running) {
             // Wait for the next set of frames from the camera
             rs2::frameset frames = pipe.wait_for_frames();
@@ -62,9 +58,6 @@ void image_processing() {
 
             rs2::frame color_frame = frames.get_color_frame();
             rs2::depth_frame depth_frame = frames.get_depth_frame().as<rs2::depth_frame>();
-
-            depth_frame = spat_filter.process(depth_frame);
-            depth_frame = temp_filter.process(depth_frame);
 
             // Convert RealSense frame to OpenCV matrix
             cv::Mat rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC3, (void*)color_frame.get_data(), cv::Mat::AUTO_STEP);
@@ -96,16 +89,16 @@ void image_processing() {
 
             // Depth sensing across a cropped ROI to find nonzero minZ as well as to isolate vine geometry for masking
             // rows is resolution[1], cols is resolution[0]
-            double minVal = std::numeric_limits<double>::max();
+            float minVal = std::numeric_limits<float>::max();
             cv::Point minLoc(0, 0);
 
             for (int v = 0; v < depth_image.rows - 60; v++) {
                 for (int u = 70; u < depth_image.cols - 70; u++) {
-                    double val = depth_frame.get_distance(u, v);
+                    float val = depth_frame.get_distance(u, v);
                     cv::Vec3b hsv_pixel = hsv_image.at<cv::Vec3b>(v, u);
 
                     bool hue_condition = 100 <= hsv_pixel[0] && 150 >= hsv_pixel[0];
-                    bool sat_condition = 0 <= hsv_pixel[1] && 150 >= hsv_pixel[1];
+                    bool sat_condition = 0 <= hsv_pixel[1] && 200 >= hsv_pixel[1];
                     bool val_condition = 0 <= hsv_pixel[2] && 255 >= hsv_pixel[2];
 
                     if (val < 0.3 && hue_condition && sat_condition && val_condition) {
@@ -130,7 +123,7 @@ void image_processing() {
 
             cv::imshow("vineMask", vineMask);
 
-            double avg_u = 0;
+            float avg_u = 0;
             int u_count = 0;
 
             for (int v = 0; v < vineMask.rows; v++) {
@@ -156,7 +149,11 @@ void image_processing() {
 
             cv::imshow("min z point and avg x", rgb_image);
 
-            cv::waitKey(1);
+            char c = (char)cv::waitKey(1);
+
+            if(c == 'q') {
+                running = false;
+            }
         }
 
         cv::destroyAllWindows();
@@ -165,20 +162,32 @@ void image_processing() {
     }
 }
 
-void drive_motors(EndEffectorConfig mechanism) {
-
+void run_motors(EndEffectorConfig mechanism) {
     cout << "motors running" << endl;
-    try {
-        while (running) {
-            if (goalZ > 0) { // initialized to 0, this check is to ensure image_processing gives valid goalZ before movement
-                mechanism.moveInZ(goalZ - hardware_buffer);
-                cout << "goal Z: " << goalZ << " hardware_buffer: " << hardware_buffer << endl;
+    while (running) {
+        float targetZPosition = mechanism.zPosition;
+        float servoingSpeed = 0;
+
+        if (goalZ > 0) { // initialized to 0, this check is to ensure image_processing gives valid goalZ before movement
+            
+            float offset = goalZ - hardware_buffer;
+
+            if((offset >= 0 && abs(offset) < deadband_buffer) || (offset < 0 && abs(offset) < int(0.3333 * deadband_buffer))) {
+                targetZPosition = mechanism.zPosition;
+                servoingSpeed = 0;
+            } else {
+                targetZPosition = mechanism.zPosition + offset;
+                servoingSpeed = 140 < int(offset) ? 140 : int(offset);
+                cout << "offset(goalZ - hwbuf): " << offset << " targetZ: " << targetZPosition << endl;
+            }
+
+            if(!mechanism.motorMoving) {
+                mechanism.goToPosition(0, targetZPosition, servoingSpeed); // updateCurrentPosition() is called within this function
             }
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Exception in drive_motors: " << e.what() << std::endl;
     }
 }
+
 
 // main function
 int main() {   
@@ -195,17 +204,19 @@ int main() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     cout << "Moving in Z a little to make room in X" << endl;
 
-    mechanism.goToPosition(0, 150, 50);
+
+    mechanism.goToPosition(0, 150, 100);
     mechanism.updateCurrentPosition();
 
     cout << "current Z: " << mechanism.zPosition << endl;
     cout << "Ready to Harvest" << endl;
     
     std::thread image_processing_thread(image_processing);
-    std::thread motor_thread(drive_motors, mechanism);
-
+    std::thread motor_thread(run_motors, mechanism);
+    
     image_processing_thread.join();
     motor_thread.join();
+
 
     return 0;
 }
