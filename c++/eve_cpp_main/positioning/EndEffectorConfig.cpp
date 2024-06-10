@@ -1,4 +1,7 @@
 // include header file for this Class
+
+// Positive X is robot's right hand side
+
 #include "EndEffectorConfig.h"
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
 #include <stdio.h>      // For printf statements
@@ -249,6 +252,21 @@ using namespace std;
         {
             leftMotor.setSpeed(speed);
             rightMotor.setSpeed(speed);
+        }
+
+        leftMotor.controlLoop(); 
+        rightMotor.controlLoop(); 
+
+    }
+
+    void EndEffectorConfig::moveInZAccel(float speed, float acceleration)
+    {
+        setGlobalAcceleration(acceleration);
+
+        if(leftMotor.currentSpeed != speed || rightMotor.currentSpeed != speed)
+        {
+            leftMotor.accToSpeed(speed);
+            rightMotor.accToSpeed(speed);
         }
 
         leftMotor.controlLoop(); 

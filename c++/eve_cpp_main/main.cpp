@@ -9,6 +9,8 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <vector>
+#include <algorithm>
 
 #include <EndEffectorConfig.h>
 #include <MotorConfig.h>
@@ -21,11 +23,22 @@ using namespace std;
 using namespace cv;
 
 std::atomic<bool> running(true);
-std::atomic<int> goalZ(0);
-float hardware_buffer = 45;
-float deadband_buffer = 15;
+std::atomic<int> goalZ(-1);
+std::atomic<int> xOffset(0);
+
+int hardware_buffer = 50;
+int deadband_buffer = 15;
+
+bool gripping = false;
+bool findingZ = false;
 
 int resolution[2] = {424, 240};
+
+struct PointValue {
+    float value;
+    int v;
+    int u;
+};
 
 uint64_t getNanos()
 {
@@ -51,6 +64,9 @@ void image_processing() {
 
         rs2::align align_to_color(RS2_STREAM_COLOR);
 
+        // int avg_u = 0;
+        int num_min_points = 1000;
+
         while (running) {
             // Wait for the next set of frames from the camera
             rs2::frameset frames = pipe.wait_for_frames();
@@ -66,10 +82,6 @@ void image_processing() {
 
             cv::cvtColor(rgb_image, hsv_image, COLOR_BGR2HSV, 0);
 
-            cv::Mat depth_visual;
-            depth_image.convertTo(depth_visual, CV_8U, 255.0 / 1000);
-
-            cv::imshow("depth_visual", depth_visual);
 
             // Creating Mask using HSV thresholding
             cv::Mat cupMask(cv::Size(resolution[0], resolution[1]), CV_8UC1);
@@ -83,71 +95,164 @@ void image_processing() {
             cv::morphologyEx(cupMask, cupMask, cv::MORPH_CLOSE, kernel);
             cv::morphologyEx(cupMask, cupMask, cv::MORPH_OPEN, kernel);
 
-            cv::imshow("mask", cupMask);
+            // cv::imshow("mask", cupMask);
 
             cv::Mat vineMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
 
             // Depth sensing across a cropped ROI to find nonzero minZ as well as to isolate vine geometry for masking
             // rows is resolution[1], cols is resolution[0]
-            float minVal = std::numeric_limits<float>::max();
-            cv::Point minLoc(0, 0);
 
+            cv::Mat depthImage = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_64F);
+            
+
+            // Extracting vine using distance away from camera (cutting away far background points) and HSV color thresholding (cutting away color mismatches from the vine)
             for (int v = 0; v < depth_image.rows - 60; v++) {
                 for (int u = 70; u < depth_image.cols - 70; u++) {
                     float val = depth_frame.get_distance(u, v);
+                    depthImage.at<double>(v, u) = val;
                     cv::Vec3b hsv_pixel = hsv_image.at<cv::Vec3b>(v, u);
 
-                    bool hue_condition = 100 <= hsv_pixel[0] && 150 >= hsv_pixel[0];
+                    bool hue_condition = 90 <= hsv_pixel[0] && 130 >= hsv_pixel[0];
                     bool sat_condition = 0 <= hsv_pixel[1] && 200 >= hsv_pixel[1];
                     bool val_condition = 0 <= hsv_pixel[2] && 255 >= hsv_pixel[2];
 
-                    if (val < 0.3 && hue_condition && sat_condition && val_condition) {
+                    if (val < 0.3 && hue_condition && sat_condition && val_condition && val != 0) {
                         vineMask.at<unsigned char>(v, u) = 255;
-                        if (val != 0 && val < minVal && val > 0) {
-                            minVal = val;
-                            minLoc = cv::Point(u, v);
+                    }
+
+                }
+            }
+
+            
+            // cout << "offset is: " << goalZ - hardware_buffer << " servoingSpeed is: " << servoingSpeed << endl;
+
+            // // Removing cups from vineMask to improve vine masking (as the gray color on the vines is a blue-based hue)
+            cv::subtract(vineMask, cupMask, vineMask);
+
+            // cv::imshow("vineMask before morph", vineMask);
+
+            cv::Mat kernel_small = cv::Mat::ones(5, 5, CV_8U);
+            cv::morphologyEx(vineMask, vineMask, cv::MORPH_OPEN, kernel_small);
+
+            // cv::imshow("vineMask after morph", vineMask);
+
+
+            // collecting locations of n lowest depth points (n = 100), adding to mask called smallest_values
+            std::vector<PointValue> points;
+
+            for(int v = 0; v < vineMask.rows; v++) {
+                for(int u = 0; u < vineMask.cols; u++) {
+                    float val = depthImage.at<double>(v, u);
+
+                    if (vineMask.at<unsigned char>(v, u) != 0 && val != 0) {
+                        points.push_back({val, v, u});
+                    }
+                    
+                }
+            }
+
+            std::sort(points.begin(), points.end(), [](const PointValue& a, const PointValue& b) {
+                return a.value < b.value;
+            });
+
+            std::vector<PointValue> smallest_z_values(points.begin(), points.begin() + std::min(num_min_points, static_cast<int>(points.size())));
+
+
+
+            // Processing to find the vertical section of the smallest_values mask, corresponding to the front rib of the vine
+            Mat smallest_values_raw = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
+
+            for(const auto& point : smallest_z_values) {
+                smallest_values_raw.at<unsigned char>(point.v, point.u) = 255;
+            }
+
+            // cv::imshow("smallest_values_raw before morph", smallest_values_raw);
+
+            cv::morphologyEx(smallest_values_raw, smallest_values_raw, cv::MORPH_OPEN, kernel);
+
+            cv::Mat verticalStructure = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 20));
+            cv::Mat filtered_smallest_values_raw;
+            cv::erode(smallest_values_raw, smallest_values_raw, verticalStructure);
+            cv::dilate(smallest_values_raw, smallest_values_raw, verticalStructure);
+
+            std::vector<std::vector<cv::Point>> contours;
+            std::vector<cv::Vec4i> hierarchy;
+            cv::findContours(smallest_values_raw, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+            // Find the largest contour which should be the vertical blob
+            int largestContourIndex = -1;
+            double largestContourArea = 0.0;
+            for (size_t i = 0; i < contours.size(); i++) {
+                double area = cv::contourArea(contours[i]);
+                if (area > largestContourArea) {
+                    largestContourArea = area;
+                    largestContourIndex = static_cast<int>(i);
+                }
+            }
+
+            cv::Mat smallest_values = cv::Mat::zeros(vineMask.size(), CV_8UC1);
+            if (largestContourIndex != -1) {
+                cv::drawContours(smallest_values, contours, largestContourIndex, cv::Scalar(255), cv::FILLED);
+            }
+
+            cv::Mat smallest_values_filtered;
+            // extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
+            cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
+
+            // cv::imshow("smallest_values_filtered", smallest_values_filtered);
+
+            float min_z_u = 0;
+            float min_z_v = 0;
+            float minVal = 0;
+            int average_counter = 0;
+
+            int min_u = std::numeric_limits<int>::max();
+            int max_u = 0;
+            
+
+            for (int v = 0; v < smallest_values_filtered.rows; v++) {
+                for (int u = 0; u < smallest_values_filtered.cols; u++) {
+                    if(smallest_values_filtered.at<unsigned char>(v, u) == 255) {
+                        min_z_u += u;
+                        min_z_v += v;
+                        minVal += depthImage.at<double>(v, u);
+                        average_counter++;
+
+                        if(u > max_u) {
+                            max_u = u;
                         }
+                        if(u < min_u) {
+                            min_u = u;
+                        } 
                     }
                 }
             }
+
+            min_z_u = int(min_z_u / average_counter);
+            min_z_v = int(min_z_v / average_counter);
+            minVal = minVal / average_counter;
+
+            // cout << "minVal: " << minVal << endl;
+
+            cv::Point minLoc(min_z_u, min_z_v);
+
+            
 
             goalZ = minVal * 1000;
 
-            // Removing cups from vineMask to prepare for vine color segmentation
-            cv::subtract(vineMask, cupMask, vineMask);
 
-            cv::imshow("vineMask before morph", vineMask);
+            int avg_u = int((max_u + min_u) / 2);
 
-            cv::Mat kernel_large = cv::Mat::ones(7, 7, CV_8U);
-            cv::morphologyEx(vineMask, vineMask, cv::MORPH_OPEN, kernel_large);
+            xOffset = int(resolution[0] / 2) - avg_u;
 
-            cv::imshow("vineMask", vineMask);
-
-            float avg_u = 0;
-            int u_count = 0;
-
-            for (int v = 0; v < vineMask.rows; v++) {
-                for (int u = 0; u < vineMask.cols; u++) {
-                    if (vineMask.at<unsigned char>(v, u) != 0) {
-                        avg_u = avg_u + u;
-                        u_count++;
-                    }
-                }
-            }
-
-            cv::Mat vineMaskedImage;
-            cv::bitwise_and(rgb_image, rgb_image, vineMaskedImage, vineMask);
-
-            cv::imshow("vine masked rgb_image", vineMaskedImage);
-
-            avg_u = int(avg_u / u_count);
+            // cout << "xOffset: " << xOffset << endl;
 
             cv::Point centerX(avg_u, int(resolution[1] / 2));
 
             cv::circle(rgb_image, minLoc, 5, cv::Scalar(0, 255, 0), -1);
             cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-            cv::imshow("min z point and avg x", rgb_image);
+            // cv::imshow("min z point and avg x", rgb_image);
 
             char c = (char)cv::waitKey(1);
 
@@ -162,27 +267,39 @@ void image_processing() {
     }
 }
 
-void run_motors(EndEffectorConfig mechanism) {
+void visual_servoing(EndEffectorConfig mechanism) {
     cout << "motors running" << endl;
+    int xServoingSpeed = 0;
+    int zServoingSpeed = 0;
+    float zOffset = 0;
+
     while (running) {
-        float targetZPosition = mechanism.zPosition;
-        float servoingSpeed = 0;
 
-        if (goalZ > 0) { // initialized to 0, this check is to ensure image_processing gives valid goalZ before movement
+        if(goalZ >= 0) { // initialized to -1, this check is to ensure image_processing gives valid goalZ before movement
             
-            float offset = goalZ - hardware_buffer;
+            if(!findingZ) {
+                if(abs(xOffset) < deadband_buffer) {
+                    xServoingSpeed = 0;
+                    findingZ = true;
+                } else {
+                    xServoingSpeed = xOffset;
+                }
 
-            if((offset >= 0 && abs(offset) < deadband_buffer) || (offset < 0 && abs(offset) < int(0.3333 * deadband_buffer))) {
-                targetZPosition = mechanism.zPosition;
-                servoingSpeed = 0;
-            } else {
-                targetZPosition = mechanism.zPosition + offset;
-                servoingSpeed = 140 < int(offset) ? 140 : int(offset);
-                cout << "offset(goalZ - hwbuf): " << offset << " targetZ: " << targetZPosition << endl;
+                mechanism.moveInX(-xServoingSpeed);
             }
 
-            if(!mechanism.motorMoving) {
-                mechanism.goToPosition(0, targetZPosition, servoingSpeed); // updateCurrentPosition() is called within this function
+            if (findingZ) { 
+                zOffset = goalZ - hardware_buffer;
+
+                if(abs(zOffset) < deadband_buffer) {
+                    zServoingSpeed = 0;
+                    findingZ = false;
+                } else {
+                    zServoingSpeed = zOffset;
+                }
+
+                mechanism.moveInZ(zServoingSpeed);
+                // mechanism.moveInZAccel(servoingSpeed, 500); // updateCurrentPosition() is called within this function
             }
         }
     }
@@ -195,7 +312,7 @@ int main() {
     EndEffectorConfig mechanism(0, 0); // defines the positioning mechanism
 
     // UPDATE Y STAGE PINS
-    // MotorConfig yStage(-1, -1, -1, -1); // defines the y stage motor, will need to determine if up/down is positive or negative speed
+    // // MotorConfig yStage(-1, -1, -1, -1); // defines the y stage motor, will need to determine if up/down is positive or negative speed
 
     mechanism.calibrateZero(100);
     mechanism.updateCurrentPosition();
@@ -205,14 +322,14 @@ int main() {
     cout << "Moving in Z a little to make room in X" << endl;
 
 
-    mechanism.goToPosition(0, 150, 100);
+    mechanism.goToPosition(0, 200, 100);
     mechanism.updateCurrentPosition();
 
     cout << "current Z: " << mechanism.zPosition << endl;
     cout << "Ready to Harvest" << endl;
     
     std::thread image_processing_thread(image_processing);
-    std::thread motor_thread(run_motors, mechanism);
+    std::thread motor_thread(visual_servoing, mechanism);
     
     image_processing_thread.join();
     motor_thread.join();

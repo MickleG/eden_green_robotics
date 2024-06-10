@@ -74,6 +74,8 @@ class EndEffectorConfig
 
         void moveInZ(float speed); // relative to robot, moves along z axis only
 
+        void moveInZAccel(float speed, float acceleraton); // relative to robot, moves along z axis only with acceleration
+
         void directionalDrive(float CMD_X_SPEED, float CMD_Z_SPEED); // relative to end effector, will actuate end effector at cmd speeds , which are limited
 
         void directionalDrive_MAG(float CMD_X_HEADING, float CMD_Z_HEADING, float speed); // drives at heading specified (unit vector) and applies speed proportionally to faster motor
