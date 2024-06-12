@@ -194,6 +194,36 @@ using namespace std;
 
     }
 
+
+    void MotorConfig::setSpeedWithUpdate(float speed) // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
+    {
+        
+        if((speed >= deadBandSpeed) && speed <= 160)
+        {
+            digitalWrite(dirPin, 1); // if speed is positive, then drive inward
+            currentDelay = (uint32_t)(4000000.0 / speed); // translate speed command to step delay in ns
+            motorDir = -1; // inwards
+            currentSpeed = speed;
+            stepCount++;
+        }
+
+        else if((speed <= (-1 * deadBandSpeed)) && speed >= -160)
+        {
+            digitalWrite(dirPin, 0); // if speed is negative, then drive outward
+            currentDelay = (uint32_t)(-4000000.0 / speed); // translate speed command to step delay in ns
+            motorDir = 1; // outwards
+            currentSpeed = speed;
+            stepCount--;
+        }
+
+        else
+        {
+            currentDelay = 0;
+            currentSpeed = 0;
+        }
+
+    }
+
     void MotorConfig::setSpeedMagnitude(float speed)
     {
         if(speed >= deadBandSpeed && speed <= 160)
@@ -298,7 +328,7 @@ using namespace std;
         {
             digitalWrite(stepPin, phase); // motor coils HIGH or LOW (1 or 0)
             prevTimeStep = nanos(); // log the time stamp for step
-            stepCount -= (motorDir*phase); // only add stepCount when coils on (phase = 1)
+            stepCount += (-motorDir*phase); // only add stepCount when coils on (phase = 1)
             phase = !phase; // switch phase b/t 0 and 1 
         }
 
@@ -423,33 +453,6 @@ using namespace std;
             accTime = nanos();
         }
 
-    }
-
-
-    void MotorConfig::goalPosition_OLD(uint16_t goalPos, float speed) // for multiple motors at a time -- use return value to see when position is achieved
-    {
-        if(goalStepPosition < stepCount)
-        {
-            if(speed != currentSpeed)
-            {
-                setSpeed(speed);
-            }
-
-            controlLoop();
-        }
-
-        else if(goalStepPosition > stepCount)
-        {
-            
-            if( (speed*-1) != currentSpeed )
-            {
-                setSpeed(speed *-1);
-            }
-
-            controlLoop();
-        }
-
-        else{findingTarget = 0;}
     }
 
 

@@ -241,8 +241,8 @@ using namespace std;
     {
         if(leftMotor.currentSpeed != speed || rightMotor.currentSpeed != (speed*=-1))
         {
-            leftMotor.setSpeed(speed);
-            rightMotor.setSpeed(speed * -1);
+            leftMotor.setSpeedWithUpdate(speed);
+            rightMotor.setSpeedWithUpdate(speed * -1);
         }
 
         leftMotor.controlLoop();
@@ -255,8 +255,8 @@ using namespace std;
     {
         if(leftMotor.currentSpeed != speed || rightMotor.currentSpeed != speed)
         {
-            leftMotor.setSpeed(speed);
-            rightMotor.setSpeed(speed);
+            leftMotor.setSpeedWithUpdate(speed);
+            rightMotor.setSpeedWithUpdate(speed);
         }
 
         leftMotor.controlLoop(); 

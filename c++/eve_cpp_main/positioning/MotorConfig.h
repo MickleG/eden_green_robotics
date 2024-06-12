@@ -64,6 +64,8 @@ public:
     void setPulseDelay(uint32_t delay); // directly change current pulse delay in ns
 
     void setSpeed(float speed); // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
+
+    void setSpeedWithUpdate(float speed); // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
     
     void setSpeedMagnitude(float speed);
     
@@ -84,9 +86,7 @@ public:
     // Goal and acceleration functions
     
     void accToSpeed(float speed); // ACCELERATION SETSPEED() ALTERNATIVE -- use in ROS loop which subscribes to commanded speed, true derivative of velocity
-    
-    void goalPosition_OLD(uint16_t goalPos, float speed); // for multiple motors at a time -- use return value to see when position is achieved
-    
+        
     void goalPosition(); // for multiple motors at a time -- use return value to see when position is achieved
 };
 

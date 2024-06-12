@@ -1,4 +1,4 @@
-// Coordinate frame: Positive x is towards robot's left hand side, positive y is robot's up
+// Coordinate frame: Positive speed for each motor is towards outer limit switch. Positive x is towards robot's right hand side, positive y is robot's up
 
 
 #include <stdio.h> 
@@ -31,11 +31,13 @@ std::atomic<bool> running(true);
 std::atomic<int> goalZ(-1);
 std::atomic<int> xOffset(0);
 std::atomic<bool> initialCenteringDone(false);
+std::atomic<bool> harvestZoneDetected(false);
 std::atomic<bool> blueDetected(false);
 std::atomic<bool> harvesting(false);
+std::atomic<bool> liftingY(false);
 
-int hardware_buffer = 50;
-int z_deadband_buffer = 15;
+int hardware_buffer = 28;
+int z_deadband_buffer = 25;
 int x_deadband_buffer = 5;
 
 int harvestToRibDist = 175; // distance from harvesting zone to when front vine becomes straight again in mm
@@ -88,7 +90,10 @@ void image_processing() {
 
         // These values determined through testing
         int cupVThreshold = 10;
-        int cupPixelThreshold = 2000;
+        int cupPixelThreshold = 1000;
+
+        int blueThresholdPixels = 100;
+        int counter = 0;
 
         while (running) {
             // Wait for the next set of frames from the camera
@@ -102,6 +107,11 @@ void image_processing() {
             cv::Mat original_rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC3, (void*)color_frame.get_data(), cv::Mat::AUTO_STEP);
             cv::Mat hsv_image;
             cv::Mat depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
+
+
+            // Code for saving images
+            // cv::imwrite("/home/edengreen/eden_green_robotics/c++/eve_cpp_main/images/rgb_image" + to_string(counter) + ".png", original_rgb_image);
+            // cv::imwrite("/home/edengreen/eden_green_robotics/c++/eve_cpp_main/images/depth_image" + to_string(counter) + ".png", depth_image);
 
             cv::Mat croppingMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
 
@@ -149,11 +159,19 @@ void image_processing() {
 
             if(!harvesting) {
                 if(abs(int(avgCupV / totalCupPixels) - targetCupV) <= cupVThreshold && abs(totalCupPixels - targetCupPointCount) <= cupPixelThreshold) {
-                    blueDetected = true;
+                    harvestZoneDetected = true;
                     // cout << "blue detected! and initialCenteringDone: " << initialCenteringDone << endl;
                 } else {
-                    blueDetected = false;
+                    harvestZoneDetected = false;
                     // cout << "blue NOT detected" << endl;
+                }
+            }
+
+            if(!harvesting && liftingY) {
+                if(totalCupPixels > blueThresholdPixels) {
+                    blueDetected = true;
+                } else {
+                    blueDetected = false;
                 }
             }
 
@@ -258,7 +276,7 @@ void image_processing() {
             // extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
             cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-            cv::imshow("smallest_values_filtered", smallest_values_filtered);
+            // cv::imshow("smallest_values_filtered", smallest_values_filtered);
 
             float min_z_u = 0;
             float min_z_v = 0;
@@ -305,13 +323,15 @@ void image_processing() {
             cv::circle(rgb_image, minLoc, 5, cv::Scalar(0, 255, 0), -1);
             cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-            cv::imshow("min z point and avg x", rgb_image);
+            // cv::imshow("min z point and avg x", rgb_image);
 
             char c = (char)cv::waitKey(1);
 
             if(c == 'q') {
                 running = false;
             }
+
+            counter++;
         }
 
         cv::destroyAllWindows();
@@ -321,7 +341,8 @@ void image_processing() {
     }
 }
 
-void visual_servoing(EndEffectorConfig mechanism) {
+void visual_servoing(EndEffectorConfig* mechanismPtr) {
+    EndEffectorConfig& mechanism = *mechanismPtr;
     cout << "motors running" << endl;
     int xServoingSpeed = -1;
     int zServoingSpeed = -1;
@@ -332,9 +353,9 @@ void visual_servoing(EndEffectorConfig mechanism) {
 
     while (running) {
 
-        if(goalZ >= 0 && !blueDetected) { // initialized to -1, this check is to ensure image_processing gives valid goalZ before movement
+        if(goalZ >= 0 && !harvestZoneDetected) { // initialized to -1, this check is to ensure image_processing gives valid goalZ before movement
             
-            if(!findingZ) {
+            if(!findingZ && !blueDetected) {
                 if(abs(xOffset) < x_deadband_buffer) {
                     xServoingSpeed = 0;
                     findingZ = true;
@@ -348,7 +369,7 @@ void visual_servoing(EndEffectorConfig mechanism) {
                 mechanism.updateCurrentPosition();
             }
 
-            if (findingZ) { 
+            if (findingZ && !blueDetected) { 
                 zOffset = goalZ - hardware_buffer;
 
                 if(abs(zOffset) < z_deadband_buffer) {
@@ -384,25 +405,26 @@ void visual_servoing(EndEffectorConfig mechanism) {
 int main() {   
     // INITIALIZE ALL MOTORS AND OBJECTS//
 
-    // int curLimit = 90;
-    // int goalCur = 200;
+    int curLimit = 90;
+    int goalCur = 200;
 
-    // //Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
-    // MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
-    // MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
+    //Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
+    MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
+    MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
 
     
     EndEffectorConfig mechanism(0, 0); // defines the positioning mechanism
 
-    // //Accessing the motors function
-    // servo1.PrintOperatingMode();
-    // servo2.PrintOperatingMode();
 
-    // servo1.SetProfile(32000, 400); // have to be in velocity mode I think
-    // servo2.SetProfile(32000, 400); // have to be in velocity mode I think
+    //Accessing the motors function
+    servo1.PrintOperatingMode();
+    servo2.PrintOperatingMode();
 
-    // // Open grippers at startup
-    // drop(servo1, servo2);
+    servo1.SetProfile(32000, 400); // have to be in velocity mode I think
+    servo2.SetProfile(32000, 400); // have to be in velocity mode I think
+
+    // Open grippers at startup
+    drop(servo1, servo2);
 
 
     mechanism.calibrateZero(100);
@@ -416,69 +438,59 @@ int main() {
     mechanism.goToPosition(0, 200, 100);
     mechanism.updateCurrentPosition();
 
-    cout << "currentPosition: " << mechanism.xPosition << ", " << mechanism.yPosition << ", " << mechanism.zPosition << endl;
-
-
-    cout << "current Z: " << mechanism.zPosition << endl;
     cout << "Ready to Harvest" << endl;
     
-    // std::thread image_processing_thread(image_processing);
-    while(true) {
-        // cout << "going to 50" << endl;
-        mechanism.goToPosition(0, 100, 100);
-        mechanism.updateCurrentPosition();
-        // cout << "currentPosition: " << mechanism.xPosition << ", " << mechanism.yPosition << ", " << mechanism.zPosition << endl;
-        usleep(5000000);
-        // cout << "going to 200" << endl;
-        mechanism.goToPosition(0, 200, 100);
-        mechanism.updateCurrentPosition();
-        // cout << "currentPosition: " << mechanism.xPosition << ", " << mechanism.yPosition << ", " << mechanism.zPosition << endl;
-        usleep(500000);
+    std::thread image_processing_thread(image_processing);
+    std::thread motor_thread(visual_servoing, &mechanism);
+
+    mechanism.yMotor.setSpeed(50);
+    mechanism.yMotor.setAcceleration(50);
+
+    while(running) {
+        if(initialCenteringDone && !harvestZoneDetected) {
+            liftingY = true;
+            mechanism.yMotor.motorDriveY();
+            mechanism.updateCurrentPosition();
+        } else if (harvestZoneDetected) {
+            harvesting = true;
+            cout << "gripping and cutting" << endl;
+
+            grip(servo1, servo2);
+            usleep(500000);
+            float currentX = mechanism.xPosition;
+            float currentY = mechanism.yPosition;
+            float currentZ = mechanism.zPosition;
+
+            cout << "currentPosition: X: " << mechanism.xPosition << ", Z: " << mechanism.zPosition << endl;
+
+            usleep(500000);
+
+            cout << "dropping" << endl;
+
+            mechanism.goToPosition(0, 100, 100);
+            mechanism.updateCurrentPosition();
+            drop(servo1, servo2);
+
+            usleep(500000);
+
+            cout << "going back to harvest zone" << endl;
+            mechanism.goToPosition(currentX, currentZ, 100);
+
+            cout << "raising up" << endl;
+
+            while(abs(mechanism.yPosition - currentY) <= 250) {
+                mechanism.yMotor.motorDriveY();
+                mechanism.updateCurrentPosition();
+            }
+
+            harvestZoneDetected = false;
+            harvesting = false;
+
+        }
     }
-    // std::thread motor_thread(visual_servoing, mechanism);
-
-    // mechanism.yMotor.setSpeed(50);
-    // mechanism.yMotor.setAcceleration(50);
-
-    // while(running) {
-    //     if(initialCenteringDone && !blueDetected) {
-    //         mechanism.yMotor.motorDriveY();
-    //         mechanism.updateCurrentPosition();
-    //     } else if (blueDetected) {
-    //         harvesting = true;
-    //         cout << "gripping and cutting" << endl;
-
-    //         grip(servo1, servo2);
-    //         usleep(500000);
-    //         float currentX = mechanism.xPosition;
-    //         float currentY = mechanism.yPosition;
-    //         float currentZ = mechanism.zPosition;
-
-    //         cout << "currentPosition: " << currentX << ", " << currentY << ", " << currentZ << endl;
-
-    //         cout << "dropping" << endl;
-
-    //         mechanism.goToPosition(0, 100, 100);
-    //         drop(servo1, servo2);
-    //         usleep(500000);
-
-    //         cout << "going back to harvest zone" << endl;
-    //         mechanism.goToPosition(currentX, currentZ, 100);
-
-    //         cout << "raising up" << endl;
-
-    //         while(abs(mechanism.yPosition - currentY) <= 175) {
-    //             mechanism.yMotor.motorDriveY();
-    //             mechanism.updateCurrentPosition();
-    //         }
-
-    //         blueDetected = false;
-
-    //     }
-    // }
     
-    // image_processing_thread.join();
-    // motor_thread.join();
+    image_processing_thread.join();
+    motor_thread.join();
 
 
     return 0;
