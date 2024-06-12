@@ -15,7 +15,9 @@ class EndEffectorConfig
     private:
 
         const float stepPerRev = 3200.0;
+        const float revPerStep = 1.0 / stepPerRev;
         const float mmPerRev = 25.0;
+        const float mmPerRevY = 150.0;
         const float linkLength = 350.0;
         const float carriageOffset = (93.5 + 30.0 + 56.5); // inside edge of aluminum bloc to center of macron rail + aluminum block thickness + carriage pin to inside edge of carriage
         const float endOffset = 130.0; // center of end effector to outer linkage pin center
@@ -32,17 +34,22 @@ class EndEffectorConfig
 
         MotorConfig leftMotor; // initialize left motor object
         MotorConfig rightMotor; // initialize right motor object
+        MotorConfig yMotor;
 
         float leftMotorPosition; // motor Position in mm
         float rightMotorPosition; // motor Position in mm
+        float yMotorPosition;
         
         float rightMotorSpeed; // speed in %
         float leftMotorSpeed; // speed in %
+        float yMotorSpeed;
 
         float xPosition; // end effector position in mm (relative to center of macron)
+        float yPosition; // end effector position in mm (relative to bottom of the macron rail)
         float zPosition; // end effeector position in mm
 
         float xCord = 0;
+        float yCord = 0;
         float zCord = 0;
 
         bool motorMoving = false;
@@ -63,6 +70,7 @@ class EndEffectorConfig
 
         // position update functions
         void updateMotorPosition(); // updates motor position in mm
+
         void updateCurrentPosition(); // updates end effector position in mm
 
         // movement fucntions

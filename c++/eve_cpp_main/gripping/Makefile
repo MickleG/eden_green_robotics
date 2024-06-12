@@ -26,7 +26,7 @@
 TARGET      = grip
 
 # important directories used by assorted rules and other variables
-DIR_DXL    = /home/everobot/DynamixelSDK/c++
+DIR_DXL    = /home/edengreen/DynamixelSDK/c++
 DIR_OBJS   = .objects
 
 # compiler options
@@ -35,7 +35,8 @@ CX          = g++
 CCFLAGS     = -O2 -O3 -DLINUX -D_GNU_SOURCE -Wall $(INCLUDES) $(FORMAT) -g
 CXFLAGS     = -O2 -O3 -DLINUX -D_GNU_SOURCE -Wall $(INCLUDES) $(FORMAT) -g
 LNKCC       = $(CX)
-LNKFLAGS    = $(CXFLAGS) #-Wl,-rpath,$(DIR_THOR)/lib
+# LNKFLAGS    = $(CXFLAGS) #-Wl,-rpath,$(DIR_THOR)/lib
+LNKFLAGS    = $(CXFLAGS) -L/home/edengreen/DynamixelSDK/c++/build/linux64
 FORMAT      = 
 
 #---------------------------------------------------------------------

@@ -1,3 +1,6 @@
+#ifndef GRIP_H
+#define GRIP_H
+
 #include <fcntl.h>
 #include <termios.h>
 #define STDIN_FILENO 0
@@ -170,3 +173,7 @@ public:
 
 };
 
+void grip(MotorXM430 servo1, MotorXM430 servo2);
+void drop(MotorXM430 servo1, MotorXM430 servo2);
+
+#endif // GRIP_H

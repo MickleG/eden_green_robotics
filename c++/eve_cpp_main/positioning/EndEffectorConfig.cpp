@@ -1,7 +1,5 @@
 // include header file for this Class
 
-// Positive X is robot's right hand side
-
 #include "EndEffectorConfig.h"
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
 #include <stdio.h>      // For printf statements
@@ -45,22 +43,27 @@ using namespace std;
     {
 
         leftMotor.setHardware(17, 18, 5, 1);
-        rightMotor.setHardware(4, 27, 2, 3); 
+        rightMotor.setHardware(4, 27, 2, 3);
+        yMotor.setHardware(25, 24, 21, 13); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);
         rightMotor.setStepPosition(right);
+        yMotor.setStepPosition(0);
         
         leftMotorPosition = 0; // motor Position in mm
         rightMotorPosition = 0; // motor Position in mm
+        yMotorPosition = 0;
     
         rightMotorSpeed = 0; // *1.6 = mm/s
         leftMotorSpeed = 0; // *1.6 = mm/s
+        yMotorSpeed = 0;
 
         //baseLength = 0; // length between outer pins on carriages
         //basePartial = 0; // for right triangle of hypotenuse link length
 
         xPosition = 0; // relative to center of macron
+        yPosition = 0; // relative to bottom of macron
         zPosition = 0; // relative to motor plane
 
         //xDirection = 0; // right relative to robot = (+)
@@ -94,7 +97,7 @@ using namespace std;
 
         zPosition = sqrt((linkLength * linkLength) - (basePartial * basePartial)) + 20; // current z cord of end effector (dist from outer pin to motor plane)
         xPosition = ((leftMotorPosition*-1) + rightMotorPosition) / 2; // current x cord of end effector relative to center plane of macron rail
-
+        yPosition = yMotor.stepCount * revPerStep * mmPerRevY;
     }
 
     void EndEffectorConfig::goToPosition(float xCord, float zCord, float speed)
@@ -151,6 +154,8 @@ using namespace std;
             {
                 leftMotor.goalPosition(); // always use goalPosition() in a loop, as "controlLoop" is not in a while loop in goalPosition() and is called based on condition
                 rightMotor.goalPosition();
+                updateCurrentPosition();
+                // cout << "currentPosition: " << xPosition << ", " << yPosition << ", " << zPosition << endl;
                 motorMoving = true;
             }
         }

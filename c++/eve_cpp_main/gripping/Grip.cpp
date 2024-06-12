@@ -419,50 +419,47 @@ void grip(MotorXM430 servo1, MotorXM430 servo2)
 
 }
 
-int main()
-{
+// int main()
+// {
 
-	int curLimit = 90;
-	int goalCur = 200;
+// 	// int curLimit = 90;
+// 	// int goalCur = 200;
 
-	//Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
-	MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
-	MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
+// 	// //Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
+// 	// MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
+// 	// MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
 	
-	//Accessing the motors function
-	servo1.PrintOperatingMode();
-	servo2.PrintOperatingMode();
+// 	// //Accessing the motors function
+// 	// servo1.PrintOperatingMode();
+// 	// servo2.PrintOperatingMode();
 
-	servo1.SetProfile(32000, 400); // have to be in velocity mode I think
-	servo2.SetProfile(32000, 400); // have to be in velocity mode I think
-	
-	//Controlling the motor
+// 	// servo1.SetProfile(32000, 400); // have to be in velocity mode I think
+// 	// servo2.SetProfile(32000, 400); // have to be in velocity mode I think
 
-	usleep(500000);
 
-	drop(servo1, servo2);
-
-	usleep(500000);
-
-	grip(servo1, servo2);
-
-	usleep(5000000);
-
-	servo1.TorqueOFF();
-	servo2.TorqueOFF();
-	
-	usleep(100000);
-
-	while (1)
-	{
-		printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-		printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
+// 	// while (1)
+// 	// {
+// 	// 	// printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
+// 	// 	// printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
 		
-		usleep(250000);
-	}
+// 	// 	// usleep(250000);
+
+// 	// 	// drop(servo1, servo2);
+
+// 	// 	drop(servo1, servo2);
+
+// 	// 	usleep(500000);
+
+// 	// 	grip(servo1, servo2);
+
+// 	// 	usleep(500000);
+// 	// }
+
+// 	// servo1.TorqueOFF();
+// 	// servo2.TorqueOFF();
 	
 	
-	//Adding others motor
+// 	//Adding others motor
 	
-	return(0);
-}
+// 	return(0);
+// }

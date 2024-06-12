@@ -152,6 +152,7 @@ using namespace std;
         pinMode(dirPin, OUTPUT);
     }
 
+
     
     void MotorConfig::setStepPosition(uint16_t steps)
     {
@@ -284,6 +285,20 @@ using namespace std;
             digitalWrite(stepPin, phase); // motor coils HIGH or LOW (1 or 0)
             prevTimeStep = nanos(); // log the time stamp for step
             stepCount += (motorDir*phase); // only add stepCount when coils on (phase = 1)
+            phase = !phase; // switch phase b/t 0 and 1 
+        }
+
+    }
+
+    void MotorConfig::motorDriveY()
+    {
+        currentTimeStep =  nanos(); // SEE IF THIS WORKS BETTER
+
+        if( ((currentTimeStep - prevTimeStep) >= currentDelay) && (currentDelay > 0) ) // changed > to >= for currentDelay
+        {
+            digitalWrite(stepPin, phase); // motor coils HIGH or LOW (1 or 0)
+            prevTimeStep = nanos(); // log the time stamp for step
+            stepCount -= (motorDir*phase); // only add stepCount when coils on (phase = 1)
             phase = !phase; // switch phase b/t 0 and 1 
         }
 

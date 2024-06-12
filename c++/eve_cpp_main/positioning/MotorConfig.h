@@ -77,6 +77,7 @@ public:
     void moveOut(uint64_t delay); // no limit sw monitoring
     
     void motorDrive(); // TO BE USED IN CONTROL LOOP -- decides when its time to step the motor based on setSpeed, keeps track of position as well
+    void motorDriveY(); // TO BE USED IN CONTROL LOOP -- decides when its time to step the motor based on setSpeed, keeps track of position as well
     
     void controlLoop(); // TO BE USED IN ROS Motor Control NODE -- update at 1GHz->2GHz
 
