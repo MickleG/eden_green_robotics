@@ -13,9 +13,9 @@ using namespace std;
 
 
 int main() {
-    cv::Mat original_rgb_image = cv::imread("/home/edengreen/eden_green_robotics/ideal_cutting_position.png", cv::IMREAD_COLOR);
-    cv::imshow("original image", original_rgb_image);
-    cv::waitKey(0);
+    cv::Mat original_rgb_image = cv::imread("/home/edengreen/eden_green_robotics/ideal_cutting_position_plant.png", cv::IMREAD_COLOR);
+    //cv::imshow("original image", original_rgb_image);
+    //cv::waitKey(0);
 
     while (true) {
 
@@ -62,7 +62,7 @@ int main() {
         cv::Point avgCupLocation(int(avgCupU / totalCupPixels), int(avgCupV / totalCupPixels));
         cv::circle(rgb_image, avgCupLocation, 5, cv::Scalar(255, 255, 0), -1);
 
-        cv::imshow("avgCupLocation", rgb_image);
+        //cv::imshow("avgCupLocation", rgb_image);
 
         cout << "total cup points: " << totalCupPixels << " location is: " << avgCupLocation.x << ", " << avgCupLocation.y << endl;
 

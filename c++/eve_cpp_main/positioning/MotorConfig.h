@@ -35,7 +35,7 @@ public:
     bool switchPress; // whether any switches are actively pressed (regardless of debounce logic) -- used during debounce determination in control loop
     
     uint32_t currentDelay; // nanoseconds -- this indicates the speed of stepper motor and is updated with setSpeed function (must be between Max and MinDelay)
-    uint16_t stepCount;    // microsteps -- configured automatically during calibration by using limit switch as physical reference, updated every time step is pulsed
+    int stepCount;    // microsteps -- configured automatically during calibration by using limit switch as physical reference, updated every time step is pulsed
     int8_t motorDir;       // 1 for inward velocity  ||  -1 for outward velocity
     int8_t driveState;     // 0 = both hit | 1 = drive | 2 = inner drive | -1 = outer drive
 
@@ -64,8 +64,6 @@ public:
     void setPulseDelay(uint32_t delay); // directly change current pulse delay in ns
 
     void setSpeed(float speed); // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
-
-    void setSpeedWithUpdate(float speed); // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
     
     void setSpeedMagnitude(float speed);
     

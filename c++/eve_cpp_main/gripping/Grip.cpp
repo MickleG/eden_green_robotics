@@ -5,12 +5,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <cmath>
+#include <iostream>
 
 #include <unistd.h>  //used for delay
 
 #include "dynamixel_sdk.h"
 #include "Grip.h"
 
+using namespace std;
 
 int MotorXM430::GetID(){return m_ID;}
 
@@ -384,38 +386,45 @@ void grip(MotorXM430 servo1, MotorXM430 servo2)
 	servo1.Goto(rightClosed);
 	servo2.Goto(leftClosed);
 
-	while(!(servo1.ReadAngle() <= rightClosed || servo2.ReadAngle() >= leftClosed) && !(abs(servo1.ReadCurrent()) >= servo1.m_current_limit || abs(servo2.ReadCurrent()) >= servo2.m_current_limit))
+	while((abs(servo1.ReadAngle() - rightClosed) >= tolerance && abs(servo2.ReadAngle() - leftClosed) >= tolerance) && servo1.ReadCurrent() <= servo1.m_current_limit && servo2.ReadCurrent() <= servo2.m_current_limit)
 	{
+		// cout << "servo1 Angle: " << servo1.ReadAngle() << ", servo1 closed angle: " << rightClosed << ", abs(difference): " << abs(servo1.ReadAngle() - rightClosed) << ", tolerance: " << tolerance << endl;
+		// cout << "servo2 Angle: " << servo2.ReadAngle() << ", servo2 closed angle: " << leftClosed << ", abs(difference): " << abs(servo2.ReadAngle() - leftClosed) << ", tolerance: " << tolerance << endl;
 		printf("GRIP ACTIVE\n");
 		printf("Motor %d, current: %d\n",servo1.GetID(), abs(servo1.ReadCurrent()));
 		printf("Motor %d, current: %d\n\n",servo2.GetID(), abs(servo2.ReadCurrent()));
 
 	}
 
-	if(servo1.ReadAngle() >= (rightClosed + tolerance) || servo2.ReadAngle() <= (315 - tolerance))
-	{
-		printf("\n\n  GRIP FAILED\n\n");
-		printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-		printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
+	// printf("\n\n GRIP COMPLETE\n\n");
+	servo1.grabSuccess = true;
+	servo2.grabSuccess = true;
 
-		servo1.grabSuccess = false;
-		servo2.grabSuccess = false;
 
-		printf("%d\n", servo1.grabSuccess);
+	// if(servo1.ReadAngle() >= (rightClosed + tolerance) || servo2.ReadAngle() <= (315 - tolerance))
+	// {
+	// 	printf("\n\n  GRIP FAILED\n\n");
+	// 	printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
+	// 	printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
 
-	}
+	// 	servo1.grabSuccess = false;
+	// 	servo2.grabSuccess = false;
 
-	else
-	{
-		printf("\n\n  GRIP COMPLETE\n\n");
-		printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-		printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
+	// 	printf("%d\n", servo1.grabSuccess);
 
-		servo1.grabSuccess = true;
-		servo2.grabSuccess = true;
+	// }
 
-		printf("%d\n", servo1.grabSuccess);
-	}
+	// else
+	// {
+	// 	printf("\n\n  GRIP COMPLETE\n\n");
+	// 	printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
+	// 	printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
+
+	// 	servo1.grabSuccess = true;
+	// 	servo2.grabSuccess = true;
+
+	// 	printf("%d\n", servo1.grabSuccess);
+	// }
 
 }
 
