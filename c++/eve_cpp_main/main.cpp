@@ -38,8 +38,8 @@ std::atomic<bool> harvesting(false);
 std::atomic<bool> liftingY(false);
 // std::atomic<bool> startTrackingHeight(false);
 
-int hardware_buffer = 35;
-int z_deadband_buffer = 25;
+int hardware_buffer = 45;
+int z_deadband_buffer = 20;
 int x_deadband_buffer = 5;
 
 int harvestToRibDist = 175; // distance from harvesting zone to when front vine becomes straight again in mm
