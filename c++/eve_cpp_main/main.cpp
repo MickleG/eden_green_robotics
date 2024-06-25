@@ -39,7 +39,7 @@ std::atomic<bool> liftingY(false);
 // std::atomic<bool> startTrackingHeight(false);
 
 int hardware_buffer = 45;
-int z_deadband_buffer = 20;
+int z_deadband_buffer = 30;
 int x_deadband_buffer = 5;
 
 int harvestToRibDist = 175; // distance from harvesting zone to when front vine becomes straight again in mm
@@ -393,7 +393,7 @@ void image_processing() {
             // cv::circle(rgb_image, minLoc, 5, cv::Scalar(0, 255, 0), -1);
             // cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-            // cv::imshow("image", rgb_image);
+            cv::imshow("image", rgb_image);
 
             char c = (char)cv::waitKey(1);
 
@@ -469,8 +469,6 @@ void visual_servoing(EndEffectorConfig* mechanismPtr) {
         if(centeredCounter == 0) {
             initialCenteringDone = true;
         }
-
-
     }
 }
 
