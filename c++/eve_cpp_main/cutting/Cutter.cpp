@@ -32,6 +32,10 @@ using namespace std;
         maxCutAttempts = newAttempts;
     }
 
+    void Cutter::resetCut() {
+        digitalWrite(cutPin, 0);
+    }
+
     void Cutter::cutPlant()
     {
         digitalWrite(cutPin, 1);

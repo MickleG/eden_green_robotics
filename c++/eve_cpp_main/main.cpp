@@ -40,7 +40,7 @@ std::atomic<bool> liftingY(false);
 
 int hardware_buffer = 45;
 int z_deadband_buffer = 30;
-int x_deadband_buffer = 5;
+int x_deadband_buffer = 15;
 
 int harvestToRibDist = 175; // distance from harvesting zone to when front vine becomes straight again in mm
 int harvestToHarvestDist = 273; // distance between each harvesting zone in mm
@@ -90,13 +90,13 @@ void image_processing() {
         int num_min_points = 2000; // Number of z-points to collect for average minimum depth sensing
         int num_min_cupPoints = 200;
         
-        // These values were determined from bringing end effector to target cutting position and measuring on a static image
-        int targetCupV = 220;
-        int targetCupPointCount = 1000; //3452
+        // // These values were determined from bringing end effector to target cutting position and measuring on a static image
+        // int targetCupV = 220;
+        // int targetCupPointCount = 1000; //3452
 
-        // These values determined through testing
-        int cupVThreshold = 10;
-        int cupPixelThreshold = 100; //1000
+        // // These values determined through testing
+        // int cupVThreshold = 10;
+        // int cupPixelThreshold = 100; //1000
 
         int blueThresholdPixels = 100;
         int counter = 0;
