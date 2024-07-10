@@ -1,5 +1,5 @@
-DEFINITIONS:
-- https://github.com/MickleG/eden_green_robotics contains the non-ROS version of the code that runs EVE. This is mainly legacy at this point. However, this repo contains test data such as both rgb and depth images for the entirety of a plant harvesting procedure, as well as this documentation package.
+REPO DEFINITIONS:
+- https://github.com/MickleG/eden_green_robotics contains the non-ROS version of the code that runs EVE. This is mainly legacy at this point. However, this repo contains this documentation package as well as test data such as both rgb and depth images for the entirety of a plant harvesting procedure.
 - https://github.com/MickleG/eve_ws contains the source code for the ROS noetic workspace that EVE runs on.
 
 
@@ -7,13 +7,83 @@ DOCKER SETUP:
 - eve_ws is built on ROS noetic. It is designed to be built and run in a docker container run on the eve_ros_image_v5 located at: https://hub.docker.com/repository/docker/mickleg/eden_green_robotics/general. 
 - Start off by installing docker (follow apt repository steps at: https://docs.docker.com/engine/install/raspberry-pi-os/)
 - Run this command to pull the proper image for EVE by running: "docker pull mickleg/eden_green_robotics:eve_ros_image_v5"
-- You now need to create the docker network that the container connects to. This allows multiple containers to talk to one another for easy integration in the future. This can be done by running "docker network create yourNetworkName". You can name the network anything you want.
-- Once the image is pulled, you will need to run the image. The following command has been created and tested such that the container will have access to all USB ports, and any graphical tools like cv::imshow or sublime text will forward to the raspberry pi display. It will also connect to the docker network you set up previously: "docker run -it --privileged --device=/dev/bus/usb --network yourNetworkName --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" --name eve_container mickleg/eden_green_robotics:eve_ros_image_v5". In this case, the container is named eve_container and it is connected to yourNetworkName. The container is built upon the image mickleg/eden_green_robotics:eve_ros_image_v5. DO NOT CHANGE ANY OF THE OTHER ARGUMENTS IN THIS COMMAND, AS IT WILL NOT BE GUARANTEED TO WORK AS INTENDED. You will know if this run is successful if the terminal goes from saying "edengreen@eve" in green to "root@some string of characters" in gray. This step as well as the previous steps only need to be done once. For all future times, use the docker exec command listed below.
-- Once you have verified the container is running, you can exit by running "exit". This should bring you back to the raspberry pi terminal (edengreen@eve in green). You can re-enter the container by running "docker exec -it nameOfYourContainer bash". Upon shutdown you may have to run "docker start nameOfYourContainer" first before you can run the docker exec command.
+- You now need to create the docker network that the container connects to. This allows multiple containers to talk to one another for easy integration in the future. This can be done by running "docker network create docker-network". You can name the network anything you want, in this case it is named docker-network.
+- Once the image is pulled, you will need to run the image. The following command has been created and tested such that the container will have access to all USB ports, and any graphical tools like cv::imshow or sublime text will forward to the raspberry pi display. It will also connect to the docker network you set up previously. The entire run command is: "docker run -it --privileged --device=/dev/bus/usb --network docker-network --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" --name eve_container mickleg/eden_green_robotics:eve_ros_image_v5". In this case, the container is named eve_container and it is connected to docker-network. The container is built upon the image mickleg/eden_green_robotics:eve_ros_image_v5. DO NOT CHANGE ANY OF THE OTHER ARGUMENTS IN THIS COMMAND, AS IT WILL NOT BE GUARANTEED TO WORK AS INTENDED. You will know if this run is successful if the terminal goes from saying "edengreen@eve" in green to "root@some string of characters" in gray. This step as well as the previous steps only need to be done once. For all future times, use the docker exec command listed below.
+- Once you have verified the container is running, you can exit by running "exit". This should bring you back to the raspberry pi terminal (edengreen@eve in green). You can re-enter the container by running "docker exec -it nameOfYourContainer bash". Upon reboot of the raspberry pi you may have to run "docker start nameOfYourContainer" first before you can run the docker exec command.
 
-GIT REPO AND ROS SETUP:
+ROS WORKSPACE SETUP:
 - Source the ros distro already installed onto the docker image by running "ros_entrypoint.sh" in the / directory.
 - Clone eve_ws from https://github.com/MickleG/eve_ws into the home directory on the raspberry pi: "cd ~" followed by "git clone https://github.com/MickleG/eve_ws".
 - cd into eve_ws, and run "catkin_make" to build the ROS workspace.
-- ROS needs to connect to the proper ROS master unique to your docker container. To find this,  run "roscore". A warning will pop up: "WARNING: ROS_MASTER_URI [http://572b15b73955:11311/] host is not set to this machine". This is because ROS is trying to connect to the ROS_MASTER_URI that was on the original container that the docker image was created on. Find a couple lines down what your ROS_MASTER_URI is, and note that down somewhere. Then, edit ~/.bashrc and at the bottom, replace the ROS_MASTER_URI with the one you noted down.
-- Once the ROS_MASTER_URI is updated, exit .bashrc and run "source ~/.bashrc". Then, go back into eve_ws, and run "rossetup". This should source the proper directories and the workspace should be ready to go. You can verify if everything is working by running "roscore" and verifying that the warning from before is gone.
+- ROS needs to connect to the proper ROS_MASTER_URI unique to your docker container. To find this,  run "roscore". A warning will pop up saying: "WARNING: ROS_MASTER_URI [http://572b15b73955:11311/] host is not set to this machine". This is because ROS is trying to connect to the ROS_MASTER_URI that was on the original container that the docker image was created on. Find a couple lines down what your ROS_MASTER_URI is, and note that down somewhere. Then, edit ~/.bashrc and at the bottom, replace the ROS_MASTER_URI with the one you noted down.
+- Once the ROS_MASTER_URI is updated, exit .bashrc and run "source ~/.bashrc" to source your bashrc file. Then, go back into eve_ws, and run "rossetup". "rossetup" is an alias that was created to run both "source /opt/ros/noetic/setup.bash" and "source ~/eve_ws/devel/setup.bash" in one simple command. This should source the proper directories and the workspace should be ready to go. You can verify if everything is working by running "roscore" and verifying that the warning from before is gone.
+
+ROS WORKSPACE STRUCTURE:
+- There is only one package inside of the eve_ws called eve_main. This package contains all of the .cpp files (located in src), the classes the .cpp files depend on (located in include), the custom ROS messages (located in msg), custom ROS services (located in srv) and the ROS launch files (located in launch).
+- There are three main nodes that are created from the source code: motor_node, image_processing_node, and eve_main_node. Below will explain the role and functions in each of these nodes, as well as the corresponding publishers, subscribers, clients, and services.
+- Here is a list of all of the ROS messages used in the workspace and their definitions:
+	- /blue_detected: boolean that is true if a sufficient number (>100 pixels) of pixels belonging to the blue cups are present in the rgb image. This is used to indicate when to perform z-servoing in motor_node.
+	- /column_done: boolean that is true if all plants in a column have been reached. This should signal the mobility platform to move to the next plant and should also trigger the y-stage to move back to the bottom to start a new column.
+	- /end_effector_position: custom message in the format:
+		float32 xPosition (mm)
+		float32 yPosition (mm)
+		float32 zPosition (mm)
+	signifying the location of the end effector with respect to the calibrated zero position (EVE's local coordinate frame defined in positioning documentation)
+	- /goal_z: int32 that signifies the detected depth position (mm) of the vine's front rib with respect to the front face of the Intel RealSense D405.
+	- /harvest_zone_detected: boolean that signifies when the blue cup has reached a predetermined and tested position within the image frame (>=200 pixels) which corresponds to the scissors being positioned at the proper height for harvest. This is used to kick off the harvest sequence.
+	- /harvesting: boolean that signifies if the robot is currently performing the functions required for harvesting. This is used to stop servoing so the harvest can happen successfully.
+	- /initial_centering_done: boolean that is true (and stays true for the entire column) when the robot first hugs the vine and is centered in the x- and z-axes. This is used to trigger the y-stage to start moving up at the start of the vine only when the vine is hugged (without this message, the y stage would start moving up as the robot tries to find the vine, which could allow it to miss the first plant entirely).
+	- /lifting_y: boolean that is true when the eve_main_node needs the y-stage to move up. It is mainly a way for the eve_main_node to command a movement in motor_node, but it is also used in image_processing_node to trigger updates in /blue_detected
+	- /x_offset: int32 that signifies the distance (pixels) that the detected centerline of the vine rib is from the centerline of the Intel RealSense D405's centerline. This is used for P control for x-servoing speed in motor_node.
+
+
+MOTOR_NODE:
+- Purpose: This node is responsible for running all motors corresponding to EVE's movement. This consists of the two stepper motors driving the linear stages in the x-z positioning mechanism, as well as the stepper motor running the y-stage.
+- Publishes the following ROS messages:
+	- /initial_centering_done
+	- /end_effector_position
+- Subcribes to the following ROS messages:
+	- /harvesting
+	- /goal_z
+	- /blue_detected
+	- /harvest_zone_detected
+	- /x_offset
+	- /lifting_y
+	- /column_done
+- Advertises the following services:
+	- get_position
+	- go_to_position
+- Calls the following services:
+	- Does not call any services
+
+IMAGE_PROCESSING_NODE:
+- Purpose: This node is responsible for performing all of the computer vision and image processing steps. It initializes the connection to the Intel RealSense D405, captures the rgb and depth streams, and isolates the cup as well as the front vine rib.
+- Publishes the following ROS messages:
+	- /blue_detected
+	- /harvest_zone_detected
+	- /goal_z
+	- /x_offset
+- Subcribes to the following ROS messages:
+	- /harvesting
+	- /lifting_y
+- Advertises the following services:
+	- Does not advertise any services
+- Calls the following services:
+	- Does not call any services
+
+EVE_MAIN_NODE:
+- Purpose: This node is responsible for coordinating the entire autonomy structure, and serves as a bridge between image processing events and motor events. Also creates objects for gripping and cutting and coordinates the actual harvesting process.
+- Publishes the following ROS messages:
+	- /lifting_y
+	- /harvesting
+	- /harvest_zone_detected
+	- /column_done
+- Subcribes to the following ROS messages:
+	- /end_effector_position
+	- /initial_centering_done
+	- /harvest_zone_detected
+- Advertises the following services:
+	- Does not advertise any services
+- Calls the following services:
+	- get_position
+	- go_to_position
