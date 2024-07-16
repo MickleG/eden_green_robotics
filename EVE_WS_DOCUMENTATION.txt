@@ -12,7 +12,7 @@ DOCKER SETUP:
 - Once you have verified the container is running, you can exit by running "exit". This should bring you back to the raspberry pi terminal (edengreen@eve in green). You can re-enter the container by running "docker exec -it nameOfYourContainer bash". Upon reboot of the raspberry pi you may have to run "docker start nameOfYourContainer" first before you can run the docker exec command.
 
 ROS WORKSPACE SETUP:
-- Source the ros distro already installed onto the docker image by running "ros_entrypoint.sh" in the / directory.
+- cd into the root directory ("cd /") and source the ros distro already installed onto the docker image by running "bash ros_entrypoint.sh".
 - Clone eve_ws from https://github.com/MickleG/eve_ws into the home directory on the raspberry pi: "cd ~" followed by "git clone https://github.com/MickleG/eve_ws".
 - cd into eve_ws, and run "catkin_make" to build the ROS workspace.
 - ROS needs to connect to the proper ROS_MASTER_URI unique to your docker container. To find this,  run "roscore". A warning will pop up saying: "WARNING: ROS_MASTER_URI [http://572b15b73955:11311/] host is not set to this machine". This is because ROS is trying to connect to the ROS_MASTER_URI that was on the original container that the docker image was created on. Find a couple lines down what your ROS_MASTER_URI is, and note that down somewhere. Then, edit ~/.bashrc and at the bottom, replace the ROS_MASTER_URI with the one you noted down.
@@ -35,6 +35,10 @@ ROS WORKSPACE STRUCTURE:
 	- /initial_centering_done: boolean that is true (and stays true for the entire column) when the robot first hugs the vine and is centered in the x- and z-axes. This is used to trigger the y-stage to start moving up at the start of the vine only when the vine is hugged (without this message, the y stage would start moving up as the robot tries to find the vine, which could allow it to miss the first plant entirely).
 	- /lifting_y: boolean that is true when the eve_main_node needs the y-stage to move up. It is mainly a way for the eve_main_node to command a movement in motor_node, but it is also used in image_processing_node to trigger updates in /blue_detected
 	- /x_offset: int32 that signifies the distance (pixels) that the detected centerline of the vine rib is from the centerline of the Intel RealSense D405's centerline. This is used for P control for x-servoing speed in motor_node.
+- Here is a list of all of the ROS services that are advertised:
+	- get_position(): returns the current instantaneous position of the end effector, referencing local coordinate frame specified in Positioning documentation
+	- go_to_position(float xPosition, float zPosition, float speed): goes to a specified x and z location at a desired speed
+	- home_y(): returns the y-stage to the bottom of the column, stopping when limit switch is triggered
 
 
 MOTOR_NODE:
@@ -53,6 +57,7 @@ MOTOR_NODE:
 - Advertises the following services:
 	- get_position
 	- go_to_position
+	- home_y
 - Calls the following services:
 	- Does not call any services
 
@@ -87,3 +92,4 @@ EVE_MAIN_NODE:
 - Calls the following services:
 	- get_position
 	- go_to_position
+	- home_y
