@@ -2,7 +2,7 @@
 
 
 REPO DEFINITIONS:
-- https://github.com/MickleG/eden_green_robotics contains the non-ROS version of the code that runs EVE. This is mainly legacy at this point. However, this repo contains this documentation package as well as test data such as both rgb and depth images for the entirety of a plant harvesting procedure.
+- https://github.com/MickleG/eden_green_robotics contains the non-ROS Python version of the code that runs EVE. This is mainly legacy at this point. However, this repo contains this documentation package as well as test data such as both rgb and depth images for the entirety of a plant harvesting procedure.
 - https://github.com/MickleG/eve_ws contains the source code for the ROS noetic workspace that EVE runs on.
 
 
@@ -10,7 +10,7 @@ HARDWARE REQUIREMENTS:
 - All code was designed to run on a Raspberry Pi 5 running a docker container. The following documentation is not guaranteed to describe the system if a different computer is used. Please refer to below for how to set up the docker container on the Raspberry Pi 5.
 
 
-DOCKER SETUP:
+DOCKER SETUP (ONLY DO THIS SETEUP IF YOU ARE NOT USING THE ORIGINAL RASPBERRY PI CURRENTLY ON THE ROBOT):
 - eve_ws is built on ROS noetic. It is designed to be built and run in a docker container run on the eve_ros_image_v5 located at: "https://hub.docker.com/repository/docker/mickleg/eden_green_robotics/general". This docker image has all of the required libraries for the ROS workspace preinstalled onto it, as well as ROS noetic. These required libraries are wiringPi, DynamixelSDK, OpenCV, and Librealsense2.
 - Start off by installing docker (follow apt repository steps at: https://docs.docker.com/engine/install/raspberry-pi-os/)
 - Run this command to pull the proper image for EVE by running: "docker pull mickleg/eden_green_robotics:eve_ros_image_v5"
@@ -121,4 +121,3 @@ ROS NODES:
 		- get_position
 		- go_to_position
 		- home_y
-	- 

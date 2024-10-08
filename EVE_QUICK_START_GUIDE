@@ -2,13 +2,14 @@
 
 Steps to run the robotic harvesting platform:
 1. Move the robot to the first vine in the row. Line it up such that the center of the scissor plate is close to the center of the vine. The robot will find the actual center upon operation, but it just needs a starting point
-2. Power on the robot, and ensure that the Raspberry Pi is on, there should be multiple LEDs that light up on the Raspberry Pi's shield
-3. *Start up ubuntu laptop, open up terminal window
-4. *SSH into the raspberry pi by running "ssh -Y edengreen@XXX.XXX.XX.XXX". Verify that ssh was successful by seeing if the left hand side of the terminal window has turned to green text
-5. *Run the following commands in succession:
+2. Power on the Tugbot. Ensure its side LEDs are on and blue.
+3. Power on the harvesting robot, and ensure that the Raspberry Pi is on, there should be multiple LEDs that light up on the Raspberry Pi's shield
+4. *Start up ubuntu laptop, open up terminal window
+5. *SSH into the raspberry pi by running "ssh -Y edengreen@XXX.XXX.XX.XXX". Verify that ssh was successful by seeing if the left hand side of the terminal window has turned to green text
+6. *Run the following commands in succession:
 	- cd ~
 	- cd eve_ws
-6. *Run "roslaunch eve_main eve.launch" to start the robot program. Robot should start moving, it will calibrate, and then it will start to harvest the vine
+7. *Run "roslaunch eve_main eve.launch" to start the robot program. Robot should start moving, it will calibrate, and then it will start to harvest the vine
 
 Steps for if something goes wrong:
 1. **Immediately press the emergency stop
